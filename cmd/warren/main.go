@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,11 +12,23 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/lawrab/warren/internal/fileops"
 	"github.com/lawrab/warren/internal/ui"
+	"github.com/lawrab/warren/internal/version"
 )
 
 const appID = "com.lawrab.warren"
 
 func main() {
+	// Parse command line flags
+	showVersion := flag.Bool("version", false, "Show version information")
+	flag.BoolVar(showVersion, "v", false, "Show version information (shorthand)")
+	flag.Parse()
+
+	// Handle version flag
+	if *showVersion {
+		fmt.Println(version.FullVersion())
+		os.Exit(0)
+	}
+
 	app := gtk.NewApplication(appID, 0)
 	app.ConnectActivate(func() { activate(app) })
 
@@ -27,7 +40,7 @@ func main() {
 func activate(app *gtk.Application) {
 	// Create main window
 	window := gtk.NewApplicationWindow(app)
-	window.SetTitle("Warren")
+	window.SetTitle(fmt.Sprintf("Warren %s", version.Short()))
 	window.SetDefaultSize(1000, 700)
 
 	// Create a header bar

@@ -1,5 +1,9 @@
 # Warren
 
+[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/lawrab/warren/releases)
+[![Go](https://img.shields.io/badge/go-1.25+-00ADD8.svg)](https://go.dev/)
+[![License](https://img.shields.io/badge/license-TBD-lightgrey.svg)](LICENSE)
+
 > *For Ann - who brings light to every burrow*
 
 A blazingly fast, keyboard-driven file manager built specifically for Hyprland.
@@ -20,9 +24,21 @@ Existing file managers are built for traditional desktop environments. Warren em
 
 ## Project Status
 
-🚧 **In Development** - Currently in planning and early development phase
+**Version 0.1.0** - Phase 1 MVP (Partial)
 
-See [docs/PHASES.md](docs/PHASES.md) for the development roadmap.
+✅ **Working Features:**
+- Directory browsing with file metadata
+- Vim-style keyboard navigation (j/k/h/l)
+- Open files with default applications
+- Toggle hidden files
+- Three-column view (Name, Size, Modified)
+
+🚧 **In Progress:**
+- Configuration file support
+- Sorting options
+- Hyprland integration
+
+See [docs/PHASES.md](docs/PHASES.md) for the complete development roadmap.
 
 ## Documentation
 
@@ -35,15 +51,40 @@ See [docs/PHASES.md](docs/PHASES.md) for the development roadmap.
 
 ## Quick Start
 
-*(Coming soon once MVP is ready)*
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/lawrab/warren.git
+cd warren
+
 # Build
 go build -o warren cmd/warren/main.go
 
 # Run
 ./warren
+
+# Check version
+./warren --version
 ```
+
+### Using Nix (Recommended)
+
+```bash
+# Enter development environment
+nix develop
+
+# Build and run
+go build -o warren cmd/warren/main.go && ./warren
+```
+
+### Keyboard Shortcuts
+
+- **j/k** or **↑/↓** - Navigate up/down
+- **h** or **←/Backspace** - Go to parent directory
+- **l** or **→/Enter** - Enter directory or open file
+- **.** (period) - Toggle hidden files
+- **q** or **Ctrl+Q** - Quit
 
 ## Philosophy
 
