@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/lawrab/warren/internal/fileops"
 	"github.com/lawrab/warren/internal/ui"
 )
 
@@ -57,7 +59,7 @@ func activate(app *gtk.Application) {
 	statusLabel.SetHExpand(true)
 	statusBar.Append(statusLabel)
 
-	helpLabel := gtk.NewLabel("j/k: navigate  h: up  l: enter  q: quit  .: toggle hidden")
+	helpLabel := gtk.NewLabel("j/k: navigate  h: up  l: enter/open  q: quit  .: toggle hidden")
 	helpLabel.AddCSSClass("dim-label")
 	statusBar.Append(helpLabel)
 
@@ -106,12 +108,27 @@ func activate(app *gtk.Application) {
 			return true
 
 		case gdk.KEY_l, gdk.KEY_Right, gdk.KEY_Return:
-			if err := fileView.NavigateInto(); err != nil {
-				// If not a directory, could open file here in future
-				statusLabel.SetText("Cannot enter: not a directory")
+			selected := fileView.GetSelected()
+			if selected == nil {
+				return true
+			}
+
+			if selected.IsDir {
+				// Navigate into directory
+				if err := fileView.NavigateInto(); err != nil {
+					statusLabel.SetText(err.Error())
+				} else {
+					pathLabel.SetText(fileView.GetCurrentPath())
+					updateStatusBar(statusLabel, fileView)
+				}
 			} else {
-				pathLabel.SetText(fileView.GetCurrentPath())
-				updateStatusBar(statusLabel, fileView)
+				// Open file with default application
+				if err := fileops.OpenFile(selected.Path); err != nil {
+					statusLabel.SetText(fmt.Sprintf("Failed to open: %v", err))
+					log.Printf("Failed to open file %s: %v", selected.Path, err)
+				} else {
+					statusLabel.SetText(fmt.Sprintf("Opened: %s", selected.Name))
+				}
 			}
 			return true
 
