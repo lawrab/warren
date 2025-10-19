@@ -1,0 +1,40 @@
+# Warren Configuration File
+# This is an example configuration file showing all available options.
+# Copy this to ~/.config/warren/config.toml and customize as needed.
+
+[appearance]
+# Show hidden files (starting with .) by default
+show_hidden = false
+
+# Default window size
+window_width = 1000
+window_height = 700
+
+[keybindings]
+# Keybindings can be single characters ("j", "k") or special key names
+# Valid special keys: "Return", "Escape", "BackSpace", "period", "space", etc.
+# See GTK key names for more options.
+
+quit = "q"
+navigate_up = "k"
+navigate_down = "j"
+parent_dir = "h"
+enter_dir = "l"
+toggle_hidden = "period"
+
+# Alternative keybinding examples:
+# quit = "Q"                # Capital Q
+# navigate_up = "w"         # Like WASD
+# navigate_down = "s"       # Like WASD
+# parent_dir = "a"          # Like WASD
+# enter_dir = "d"           # Like WASD
+# toggle_hidden = "space"   # Spacebar
+
+[general]
+# Starting directory when Warren launches
+# Options:
+#   "~"     - Home directory (default)
+#   "/"     - Root directory
+#   "/path" - Any absolute path
+#   "last"  - Remember last directory (not yet implemented)
+start_directory = "~"

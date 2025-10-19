@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gio/v2"
 	"github.com/diamondburned/gotk4/pkg/glib/v2"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
+	"github.com/lawrab/warren/internal/config"
 	"github.com/lawrab/warren/internal/fileops"
 	"github.com/lawrab/warren/internal/ui"
 	"github.com/lawrab/warren/internal/version"
@@ -29,19 +31,22 @@ func main() {
 		os.Exit(0)
 	}
 
+	// Load configuration
+	cfg := config.LoadOrDefault()
+
 	app := gtk.NewApplication(appID, 0)
-	app.ConnectActivate(func() { activate(app) })
+	app.ConnectActivate(func() { activate(app, cfg) })
 
 	if code := app.Run(os.Args); code > 0 {
 		os.Exit(code)
 	}
 }
 
-func activate(app *gtk.Application) {
+func activate(app *gtk.Application, cfg *config.Config) {
 	// Create main window
 	window := gtk.NewApplicationWindow(app)
 	window.SetTitle(fmt.Sprintf("Warren %s", version.Short()))
-	window.SetDefaultSize(1000, 700)
+	window.SetDefaultSize(cfg.Appearance.WindowWidth, cfg.Appearance.WindowHeight)
 
 	// Create a header bar
 	headerBar := gtk.NewHeaderBar()
@@ -81,14 +86,11 @@ func activate(app *gtk.Application) {
 	// Add box to window
 	window.SetChild(box)
 
-	// Get home directory
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		homeDir = "/"
-	}
+	// Determine starting directory
+	startDir := getStartDirectory(cfg.General.StartDirectory)
 
 	// Load initial directory
-	if err := fileView.LoadDirectory(homeDir); err != nil {
+	if err := fileView.LoadDirectory(startDir); err != nil {
 		log.Printf("Failed to load directory: %v", err)
 		statusLabel.SetText(err.Error())
 	} else {
@@ -96,22 +98,33 @@ func activate(app *gtk.Application) {
 		updateStatusBar(statusLabel, fileView)
 	}
 
+	// Apply initial show hidden files setting from config
+	if cfg.Appearance.ShowHidden {
+		if err := fileView.ToggleHidden(); err != nil {
+			log.Printf("Failed to apply show_hidden setting: %v", err)
+		}
+	}
+
 	// Set up keyboard event controller
 	keyController := gtk.NewEventControllerKey()
 	keyController.ConnectKeyPressed(func(keyval uint, keycode uint, state gdk.ModifierType) bool {
-		// Handle keyboard navigation
-		switch keyval {
-		case gdk.KEY_j, gdk.KEY_Down:
+		// Convert pressed key to string for comparison
+		keyName := gdk.KeyvalName(keyval)
+
+		// Check custom keybindings from config
+		if keyMatchesConfig(keyval, cfg.Keybindings.NavigateDown) || keyval == gdk.KEY_Down {
 			fileView.SelectNext()
 			updateStatusBar(statusLabel, fileView)
 			return true
+		}
 
-		case gdk.KEY_k, gdk.KEY_Up:
+		if keyMatchesConfig(keyval, cfg.Keybindings.NavigateUp) || keyval == gdk.KEY_Up {
 			fileView.SelectPrevious()
 			updateStatusBar(statusLabel, fileView)
 			return true
+		}
 
-		case gdk.KEY_h, gdk.KEY_Left, gdk.KEY_BackSpace:
+		if keyMatchesConfig(keyval, cfg.Keybindings.ParentDir) || keyval == gdk.KEY_Left || keyval == gdk.KEY_BackSpace {
 			if err := fileView.NavigateUp(); err != nil {
 				statusLabel.SetText(err.Error())
 			} else {
@@ -119,8 +132,9 @@ func activate(app *gtk.Application) {
 				updateStatusBar(statusLabel, fileView)
 			}
 			return true
+		}
 
-		case gdk.KEY_l, gdk.KEY_Right, gdk.KEY_Return:
+		if keyMatchesConfig(keyval, cfg.Keybindings.EnterDir) || keyval == gdk.KEY_Right || keyval == gdk.KEY_Return {
 			selected := fileView.GetSelected()
 			if selected == nil {
 				return true
@@ -144,20 +158,23 @@ func activate(app *gtk.Application) {
 				}
 			}
 			return true
+		}
 
-		case gdk.KEY_period:
+		if keyMatchesConfig(keyval, cfg.Keybindings.ToggleHidden) {
 			if err := fileView.ToggleHidden(); err != nil {
 				statusLabel.SetText(err.Error())
 			} else {
 				updateStatusBar(statusLabel, fileView)
 			}
 			return true
+		}
 
-		case gdk.KEY_q:
+		if keyMatchesConfig(keyval, cfg.Keybindings.Quit) {
 			window.Close()
 			return true
 		}
 
+		_ = keyName // Keep for potential debugging
 		return false
 	})
 
@@ -187,4 +204,61 @@ func setupShortcuts(app *gtk.Application, window *gtk.ApplicationWindow) {
 	})
 	app.AddAction(quitAction)
 	app.SetAccelsForAction("app.quit", []string{"<Ctrl>Q"})
+}
+
+// keyMatchesConfig checks if a pressed keyval matches a configured key binding.
+// The config string can be a simple letter ("j", "k") or a special key name
+// ("period", "Return", "Escape", etc.).
+func keyMatchesConfig(keyval uint, configKey string) bool {
+	if configKey == "" {
+		return false
+	}
+
+	// Get the key name from the keyval
+	keyName := gdk.KeyvalName(keyval)
+
+	// Direct name match (e.g., "Return", "Escape", "BackSpace")
+	if keyName == configKey {
+		return true
+	}
+
+	// Single character match (e.g., "j" matches 'j')
+	if len(configKey) == 1 {
+		if keyval == uint(configKey[0]) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// getStartDirectory returns the starting directory based on config.
+// Supports "~" for home directory and absolute paths.
+// TODO: Support "last" to remember last directory (Phase 1 future enhancement).
+func getStartDirectory(configDir string) string {
+	// Handle home directory
+	if configDir == "~" || configDir == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Printf("Failed to get home directory: %v", err)
+			return "/"
+		}
+		return homeDir
+	}
+
+	// Handle absolute paths
+	if filepath.IsAbs(configDir) {
+		// Verify directory exists
+		if info, err := os.Stat(configDir); err == nil && info.IsDir() {
+			return configDir
+		}
+		log.Printf("Configured start directory %s does not exist, using home", configDir)
+	}
+
+	// Fall back to home directory
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "/"
+	}
+	return homeDir
 }
