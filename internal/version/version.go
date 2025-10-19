@@ -13,7 +13,7 @@ const (
 	Minor = 1
 
 	// Patch version number
-	Patch = 0
+	Patch = 1
 
 	// PreRelease is for pre-release versions (e.g., "alpha", "beta", "rc.1")
 	// Empty string for stable releases
