@@ -61,10 +61,10 @@ func Default() *Config {
 	}
 }
 
-// ConfigDir returns the directory where Warren stores its configuration.
+// Dir returns the directory where Warren stores its configuration.
 // Follows XDG Base Directory specification: $XDG_CONFIG_HOME/warren
 // or defaults to ~/.config/warren if XDG_CONFIG_HOME is not set.
-func ConfigDir() (string, error) {
+func Dir() (string, error) {
 	configHome := os.Getenv("XDG_CONFIG_HOME")
 	if configHome == "" {
 		homeDir, err := os.UserHomeDir()
@@ -78,9 +78,9 @@ func ConfigDir() (string, error) {
 	return configDir, nil
 }
 
-// ConfigPath returns the full path to the configuration file.
-func ConfigPath() (string, error) {
-	dir, err := ConfigDir()
+// Path returns the full path to the configuration file.
+func Path() (string, error) {
+	dir, err := Dir()
 	if err != nil {
 		return "", err
 	}
@@ -91,7 +91,7 @@ func ConfigPath() (string, error) {
 // If the file doesn't exist, returns the default configuration.
 // If the file exists but is invalid, returns an error.
 func Load() (*Config, error) {
-	configPath, err := ConfigPath()
+	configPath, err := Path()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config path: %w", err)
 	}
@@ -102,6 +102,7 @@ func Load() (*Config, error) {
 	}
 
 	// Read config file
+	// #nosec G304 -- configPath is derived from XDG spec, not user input
 	data, err := os.ReadFile(configPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -119,14 +120,14 @@ func Load() (*Config, error) {
 // Save writes the configuration to disk.
 // Creates the configuration directory if it doesn't exist.
 func Save(cfg *Config) error {
-	configPath, err := ConfigPath()
+	configPath, err := Path()
 	if err != nil {
 		return fmt.Errorf("failed to get config path: %w", err)
 	}
 
 	// Ensure config directory exists
 	configDir := filepath.Dir(configPath)
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return fmt.Errorf("failed to create config directory: %w", err)
 	}
 
@@ -137,7 +138,7 @@ func Save(cfg *Config) error {
 	}
 
 	// Write to file
-	if err := os.WriteFile(configPath, data, 0644); err != nil {
+	if err := os.WriteFile(configPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 

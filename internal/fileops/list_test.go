@@ -157,8 +157,10 @@ func TestSortFiles(t *testing.T) {
 	})
 }
 
-func TestListDirectory(t *testing.T) {
-	// Create temporary test directory
+// setupTestDirectory creates a test directory structure for ListDirectory tests.
+// Returns tmpDir and file1 path for verification.
+func setupTestDirectory(t *testing.T) (string, string) {
+	t.Helper()
 	tmpDir := t.TempDir()
 
 	// Create test structure:
@@ -171,24 +173,30 @@ func TestListDirectory(t *testing.T) {
 	// Create regular files
 	file1 := filepath.Join(tmpDir, "file1.txt")
 	file2 := filepath.Join(tmpDir, "file2.log")
-	if err := os.WriteFile(file1, []byte("content1"), 0644); err != nil {
+	if err := os.WriteFile(file1, []byte("content1"), 0600); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
-	if err := os.WriteFile(file2, []byte("content2"), 0644); err != nil {
+	if err := os.WriteFile(file2, []byte("content2"), 0600); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
 	// Create hidden file
 	hiddenFile := filepath.Join(tmpDir, ".hidden")
-	if err := os.WriteFile(hiddenFile, []byte("hidden"), 0644); err != nil {
+	if err := os.WriteFile(hiddenFile, []byte("hidden"), 0600); err != nil {
 		t.Fatalf("Failed to create hidden file: %v", err)
 	}
 
 	// Create subdirectory
 	subdir := filepath.Join(tmpDir, "subdir")
-	if err := os.Mkdir(subdir, 0755); err != nil {
+	if err := os.Mkdir(subdir, 0700); err != nil {
 		t.Fatalf("Failed to create subdirectory: %v", err)
 	}
+
+	return tmpDir, file1
+}
+
+func TestListDirectory(t *testing.T) {
+	tmpDir, file1 := setupTestDirectory(t)
 
 	t.Run("list without hidden files", func(t *testing.T) {
 		files, err := ListDirectory(tmpDir, false)
@@ -310,7 +318,7 @@ func TestGetFileInfo(t *testing.T) {
 	testFile := filepath.Join(tmpDir, "testfile.txt")
 	testContent := []byte("test content")
 
-	if err := os.WriteFile(testFile, testContent, 0644); err != nil {
+	if err := os.WriteFile(testFile, testContent, 0600); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -350,7 +358,7 @@ func TestGetFileInfo(t *testing.T) {
 
 	t.Run("get info for hidden file", func(t *testing.T) {
 		hiddenFile := filepath.Join(tmpDir, ".hidden")
-		if err := os.WriteFile(hiddenFile, []byte("hidden"), 0644); err != nil {
+		if err := os.WriteFile(hiddenFile, []byte("hidden"), 0600); err != nil {
 			t.Fatalf("Failed to create hidden file: %v", err)
 		}
 

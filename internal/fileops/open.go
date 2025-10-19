@@ -22,7 +22,7 @@ func OpenFile(path string) error {
 	// 3. We're not constructing shell commands - just passing arguments
 	// 4. This is the standard way to open files with default applications
 	//
-	//nolint:gosec // G204: Subprocess launched with file path - intentional for file opening
+	// #nosec G204 -- Subprocess launched with file path - intentional for file opening
 	switch runtime.GOOS {
 	case "linux":
 		cmd = exec.Command("xdg-open", path)

@@ -1,3 +1,5 @@
+// Warren is a keyboard-driven GTK4 file manager built for Hyprland.
+// This package contains the main entry point and UI setup logic.
 package main
 
 import (
@@ -107,7 +109,7 @@ func activate(app *gtk.Application, cfg *config.Config) {
 
 	// Set up keyboard event controller
 	keyController := gtk.NewEventControllerKey()
-	keyController.ConnectKeyPressed(func(keyval uint, keycode uint, state gdk.ModifierType) bool {
+	keyController.ConnectKeyPressed(func(keyval uint, _ uint, _ gdk.ModifierType) bool {
 		// Convert pressed key to string for comparison
 		keyName := gdk.KeyvalName(keyval)
 
@@ -199,7 +201,7 @@ func updateStatusBar(label *gtk.Label, fileView *ui.FileView) {
 func setupShortcuts(app *gtk.Application, window *gtk.ApplicationWindow) {
 	// Quit on Ctrl+Q
 	quitAction := gio.NewSimpleAction("quit", nil)
-	quitAction.ConnectActivate(func(parameter *glib.Variant) {
+	quitAction.ConnectActivate(func(_ *glib.Variant) {
 		window.Close()
 	})
 	app.AddAction(quitAction)

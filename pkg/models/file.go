@@ -56,9 +56,13 @@ type FileList struct {
 type SortBy int
 
 const (
+	// SortByName sorts files alphabetically by name
 	SortByName SortBy = iota
+	// SortBySize sorts files by size
 	SortBySize
+	// SortByModTime sorts files by modification time
 	SortByModTime
+	// SortByExtension sorts files by file extension
 	SortByExtension
 )
 
@@ -66,6 +70,8 @@ const (
 type SortOrder int
 
 const (
+	// SortAscending sorts in ascending order (A-Z, 0-9, oldest-newest)
 	SortAscending SortOrder = iota
+	// SortDescending sorts in descending order (Z-A, 9-0, newest-oldest)
 	SortDescending
 )
