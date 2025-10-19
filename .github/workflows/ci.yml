@@ -53,11 +53,14 @@ jobs:
         run: go mod download
 
       - name: Run tests
-        run: go test -v -race ./...
-
-      - name: Generate coverage report
-        if: matrix.go-version == '1.25'
-        run: go test -coverprofile=coverage.out -covermode=atomic ./...
+        run: |
+          if [ "${{ matrix.go-version }}" == "1.25" ]; then
+            # Go 1.25: run with race detector AND coverage in one pass
+            go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+          else
+            # Go 1.23: just race detector (no covdata tool for race+coverage)
+            go test -v -race ./...
+          fi
 
       - name: Upload coverage artifact
         if: matrix.go-version == '1.25'
