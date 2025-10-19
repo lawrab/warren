@@ -32,6 +32,9 @@ vendor/
 *~
 .DS_Store
 
+# Development tools
+.serena/
+
 # Nix
 result
 result-*
