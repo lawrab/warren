@@ -1,0 +1,191 @@
+name: CI
+
+on:
+  # Run on pull requests to main
+  pull_request:
+    branches: [main]
+
+  # Run on direct pushes to main (after PR merge)
+  push:
+    branches: [main]
+
+# Cancel in-progress runs when a new run is triggered
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Test job - runs tests with coverage
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libgirepository1.0-dev pkg-config
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+
+      - name: Cache Go build (CGO objects)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-1.25-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-1.25-
+            ${{ runner.os }}-go-
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 7
+
+  # Lint job - runs golangci-lint
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libgirepository1.0-dev pkg-config
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+
+      - name: Cache Go build (CGO objects)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-1.25-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-1.25-
+            ${{ runner.os }}-go-
+
+      - name: Install golangci-lint
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.5.0
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Run golangci-lint
+        run: golangci-lint run --timeout=10m
+
+  # Format check job - ensures code is formatted
+  format-check:
+    name: Format Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Check formatting
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "The following files are not formatted:"
+            gofmt -l .
+            echo ""
+            echo "Please run: go fmt ./..."
+            exit 1
+          fi
+
+  # Build job - ensures the project builds successfully
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-4-dev libgirepository1.0-dev pkg-config
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+
+      - name: Cache Go build (CGO objects)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-1.25-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-1.25-
+            ${{ runner.os }}-go-
+
+      - name: Build
+        run: |
+          CGO_ENABLED=1 go build -v -o warren cmd/warren/main.go
+
+      - name: Verify binary
+        run: |
+          ./warren --version
+          if [ $? -ne 0 ]; then
+            echo "Binary failed to execute"
+            exit 1
+          fi
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: warren-binary
+          path: warren
+          retention-days: 7
+
+  # Status check - all jobs must pass
+  ci-success:
+    name: CI Success
+    if: always()
+    needs: [test, lint, format-check, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs
+        run: |
+          if [[ "${{ needs.test.result }}" != "success" ]] ||
+             [[ "${{ needs.lint.result }}" != "success" ]] ||
+             [[ "${{ needs.format-check.result }}" != "success" ]] ||
+             [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "One or more CI jobs failed"
+            exit 1
+          fi
+          echo "All CI jobs passed!"

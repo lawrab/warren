@@ -222,9 +222,66 @@ go tool pprof mem.prof
 - Filesystem watcher (for live updates)
 - Image libraries (for preview pane)
 
+## Development Workflow
+
+### Branch Strategy
+**IMPORTANT:** The `main` branch is protected. All changes must go through pull requests.
+
+```bash
+# Start from up-to-date main
+git checkout main
+git pull
+
+# Create feature branch
+git checkout -b feature/description
+
+# Make changes and commit
+git add .
+git commit -m "feat: description"
+
+# Push and create PR
+git push -u origin feature/description
+gh pr create
+```
+
+### Branch Naming
+- `feature/description` - New features
+- `bugfix/description` - Bug fixes
+- `docs/description` - Documentation
+- `refactor/description` - Code refactoring
+- `test/description` - Tests
+
+### Git Hooks (Local Checks)
+```bash
+# One-time setup - runs checks before each commit
+bash .githooks/setup.sh
+
+# Hooks run: format check, lint, tests
+# Skip if needed: git commit --no-verify
+```
+
+### CI/CD Pipeline
+Every push and PR triggers automated checks:
+- ✅ **Tests** - Go 1.23 & 1.25 with race detector
+- ✅ **Lint** - golangci-lint with project config
+- ✅ **Format** - gofmt check
+- ✅ **Build** - Binary compilation and execution test
+
+All checks must pass before PR can be merged.
+
+### Pull Request Process
+1. Create PR from feature branch to `main`
+2. Fill out PR template
+3. Wait for CI checks to pass
+4. Request review if needed
+5. Merge when approved and CI passes
+
+See `CONTRIBUTING.md` for detailed guidelines.
+
 ## Commit Guidelines
 
 - Keep commits focused and atomic
 - Reference issue/feature in commit message if applicable
 - Run `go fmt` before committing
-- Ensure tests pass (when tests exist)
+- Ensure tests pass
+- Follow conventional commits format when possible
