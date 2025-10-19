@@ -42,9 +42,7 @@ func TestSaveAndLoad(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Override the config path for testing
-	originalXDG := os.Getenv("XDG_CONFIG_HOME")
-	os.Setenv("XDG_CONFIG_HOME", tmpDir)
-	defer os.Setenv("XDG_CONFIG_HOME", originalXDG)
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
 
 	// Create a custom config
 	cfg := Default()
@@ -89,9 +87,7 @@ func TestLoadNonexistent(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Override the config path for testing
-	originalXDG := os.Getenv("XDG_CONFIG_HOME")
-	os.Setenv("XDG_CONFIG_HOME", tmpDir)
-	defer os.Setenv("XDG_CONFIG_HOME", originalXDG)
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
 
 	// Load config when file doesn't exist
 	cfg, err := Load()
@@ -111,9 +107,7 @@ func TestLoadOrDefault(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Override the config path for testing
-	originalXDG := os.Getenv("XDG_CONFIG_HOME")
-	os.Setenv("XDG_CONFIG_HOME", tmpDir)
-	defer os.Setenv("XDG_CONFIG_HOME", originalXDG)
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
 
 	// LoadOrDefault should never fail, always return valid config
 	cfg := LoadOrDefault()

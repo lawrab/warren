@@ -1,0 +1,124 @@
+# golangci-lint configuration for Warren
+# Best practice: Start with defaults, add carefully chosen linters
+# Reference: https://golangci-lint.run/usage/configuration/
+
+version: 2
+
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - vendor
+    - testdata
+    - .direnv
+
+output:
+  print-issued-lines: true
+  print-linter-name: true
+  sort-results: true
+
+linters:
+  # Don't disable defaults - they catch real bugs
+  disable-all: false
+
+  # Add useful linters beyond the defaults
+  enable:
+    # Security
+    - gosec       # Security checks (G204 handled in code with nolint)
+
+    # Code quality
+    - gocyclo     # Cyclomatic complexity
+    - dupl        # Code duplication
+    - goconst     # Repeated strings
+    - misspell    # Spelling errors
+    - revive      # Fast linter (golint replacement)
+
+    # Bug detection
+    - bodyclose   # HTTP response body not closed
+    - nilerr      # Returns nil with non-nil error
+    - errorlint   # Error wrapping issues
+
+    # Code cleanliness
+    - unconvert   # Unnecessary type conversions
+    - unparam     # Unused function parameters
+    - prealloc    # Slice preallocation opportunities
+    - predeclared # Shadowing of predeclared identifiers
+    - nolintlint  # Malformed nolint directives
+
+linters-settings:
+  gocyclo:
+    min-complexity: 30  # Allow complex test functions
+
+  dupl:
+    threshold: 100  # Lines of code similarity to trigger
+
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+
+  govet:
+    enable-all: true
+    disable:
+      - shadow  # Can be overly strict
+
+  gosec:
+    # G204 (subprocess with variable) handled explicitly in code with nolint
+    # G304, G306, G301 (file permissions) - relaxed for file manager use case
+    excludes:
+      - G104  # Covered by errcheck
+      - G304  # File inclusion via variable - expected for file manager
+      - G306  # File permissions - file manager needs standard permissions
+      - G301  # Directory permissions - file manager needs standard permissions
+
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: var-declaration
+      - name: range
+      - name: receiver-naming
+      - name: time-naming
+      - name: indent-error-flow
+      - name: errorf
+      - name: empty-block
+      - name: superfluous-else
+      - name: unused-parameter
+      - name: unreachable-code
+      - name: redefines-builtin-id
+      # Disabled for learning project
+      - name: package-comments
+        disabled: true
+
+  errorlint:
+    errorf: true
+    asserts: true
+    comparison: true
+
+issues:
+  max-issues-per-linter: 50
+  max-same-issues: 3
+
+  exclude-rules:
+    # Relax linting for test files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - dupl
+        - gosec
+        - goconst
+
+    # Doc files don't need line length checks
+    - path: (.*/)?doc\.go
+      linters:
+        - lll
+
+  # Use default exclusions
+  exclude-use-default: true

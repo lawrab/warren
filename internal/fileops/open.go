@@ -15,6 +15,14 @@ func OpenFile(path string) error {
 
 	var cmd *exec.Cmd
 
+	// Security note: We're intentionally passing user-controlled file paths to system commands.
+	// This is safe because:
+	// 1. xdg-open/open/start are designed to handle arbitrary file paths
+	// 2. The OS handles all security checks (file permissions, safe opening)
+	// 3. We're not constructing shell commands - just passing arguments
+	// 4. This is the standard way to open files with default applications
+	//
+	//nolint:gosec // G204: Subprocess launched with file path - intentional for file opening
 	switch runtime.GOOS {
 	case "linux":
 		cmd = exec.Command("xdg-open", path)
@@ -33,8 +41,9 @@ func OpenFile(path string) error {
 	}
 
 	// Don't wait for the process - let it run independently
+	// We intentionally ignore errors here since the application has already opened
 	go func() {
-		cmd.Wait()
+		_ = cmd.Wait() // Explicitly ignore error
 	}()
 
 	return nil
