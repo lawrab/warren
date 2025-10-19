@@ -17,11 +17,8 @@ concurrency:
 jobs:
   # Test job - runs tests with coverage
   test:
-    name: Test (Go ${{ matrix.go-version }})
+    name: Test
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go-version: ["1.23", "1.25"]
 
     steps:
       - name: Checkout code
@@ -35,7 +32,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: "1.25"
           cache: true
 
       - name: Cache Go build (CGO objects)
@@ -44,26 +41,18 @@ jobs:
           path: |
             ~/.cache/go-build
             ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-1.25-${{ hashFiles('**/go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-go-${{ matrix.go-version }}-
+            ${{ runner.os }}-go-1.25-
             ${{ runner.os }}-go-
 
       - name: Download dependencies
         run: go mod download
 
       - name: Run tests
-        run: |
-          if [ "${{ matrix.go-version }}" == "1.25" ]; then
-            # Go 1.25: run with race detector AND coverage in one pass
-            go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
-          else
-            # Go 1.23: just race detector (no covdata tool for race+coverage)
-            go test -v -race ./...
-          fi
+        run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
       - name: Upload coverage artifact
-        if: matrix.go-version == '1.25'
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
