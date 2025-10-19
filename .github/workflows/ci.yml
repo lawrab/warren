@@ -36,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev pkg-config
+          sudo apt-get install -y libgtk-4-dev libgirepository1.0-dev pkg-config
 
       - name: Download dependencies
         run: go mod download
@@ -74,7 +74,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev pkg-config
+          sudo apt-get install -y libgtk-4-dev libgirepository1.0-dev pkg-config
 
       - name: Install golangci-lint
         run: |
@@ -126,7 +126,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-4-dev pkg-config
+          sudo apt-get install -y libgtk-4-dev libgirepository1.0-dev pkg-config
 
       - name: Build
         run: |
