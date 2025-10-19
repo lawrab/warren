@@ -75,3 +75,19 @@ const (
 	// SortDescending sorts in descending order (Z-A, 9-0, newest-oldest)
 	SortDescending
 )
+
+// String returns a human-readable name for the sort mode.
+func (s SortBy) String() string {
+	switch s {
+	case SortByName:
+		return "Name"
+	case SortBySize:
+		return "Size"
+	case SortByModTime:
+		return "Modified"
+	case SortByExtension:
+		return "Extension"
+	default:
+		return "Name"
+	}
+}
