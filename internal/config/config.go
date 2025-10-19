@@ -96,6 +96,7 @@ func Path() (string, error) {
 // Load reads the configuration file and returns a Config.
 // If the file doesn't exist, returns the default configuration.
 // If the file exists but is invalid, returns an error.
+// Missing fields in the config file are filled with default values.
 func Load() (*Config, error) {
 	configPath, err := Path()
 	if err != nil {
@@ -114,13 +115,13 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 
-	// Parse TOML with strict mode to catch typos
-	var config Config
-	if err := toml.Unmarshal(data, &config); err != nil {
+	// Start with defaults, then overlay user config
+	config := Default()
+	if err := toml.Unmarshal(data, config); err != nil {
 		return nil, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
-	return &config, nil
+	return config, nil
 }
 
 // Save writes the configuration to disk.
