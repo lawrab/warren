@@ -10,6 +10,12 @@ show_hidden = false
 window_width = 1000
 window_height = 700
 
+# Default sort mode and order
+# Sort modes: "name", "size", "modified", "extension"
+# Sort orders: "ascending", "descending"
+default_sort_mode = "name"
+default_sort_order = "ascending"
+
 [keybindings]
 # Keybindings can be single characters ("j", "k") or special key names
 # Valid special keys: "Return", "Escape", "BackSpace", "period", "space", etc.
@@ -21,6 +27,7 @@ navigate_down = "j"
 parent_dir = "h"
 enter_dir = "l"
 toggle_hidden = "period"
+cycle_sort_mode = "s"
 
 # Alternative keybinding examples:
 # quit = "Q"                # Capital Q

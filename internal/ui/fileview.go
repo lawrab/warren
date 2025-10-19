@@ -21,6 +21,8 @@ type FileView struct {
 	selectedIndex int
 	files         []models.FileInfo
 	showHidden    bool
+	sortMode      models.SortBy
+	sortOrder     models.SortOrder
 }
 
 // NewFileView creates a new file listing widget.
@@ -29,6 +31,8 @@ func NewFileView() *FileView {
 		selectedIndex: -1,
 		showHidden:    false,
 		files:         make([]models.FileInfo, 0),
+		sortMode:      models.SortByName,
+		sortOrder:     models.SortAscending,
 	}
 
 	// Create list store to hold file data
@@ -149,8 +153,8 @@ func (fv *FileView) LoadDirectory(path string) error {
 		return fmt.Errorf("failed to load directory: %w", err)
 	}
 
-	// Sort files by name
-	fileops.SortFiles(files, models.SortByName, models.SortAscending)
+	// Sort files using current sort mode and order
+	fileops.SortFiles(files, fv.sortMode, fv.sortOrder)
 
 	fv.files = files
 	fv.currentPath = path
@@ -271,4 +275,40 @@ func (fv *FileView) ParentPath() string {
 		return ""
 	}
 	return filepath.Dir(fv.currentPath)
+}
+
+// SetSortMode sets the sort mode and order for the file view.
+func (fv *FileView) SetSortMode(mode models.SortBy, order models.SortOrder) {
+	fv.sortMode = mode
+	fv.sortOrder = order
+}
+
+// CycleSortMode cycles through the available sort modes.
+// Order: Name -> Size -> Modified -> Extension -> (repeat)
+func (fv *FileView) CycleSortMode() error {
+	switch fv.sortMode {
+	case models.SortByName:
+		fv.sortMode = models.SortBySize
+	case models.SortBySize:
+		fv.sortMode = models.SortByModTime
+	case models.SortByModTime:
+		fv.sortMode = models.SortByExtension
+	case models.SortByExtension:
+		fv.sortMode = models.SortByName
+	default:
+		fv.sortMode = models.SortByName
+	}
+
+	// Re-sort and refresh the display
+	return fv.LoadDirectory(fv.currentPath)
+}
+
+// GetSortMode returns the current sort mode.
+func (fv *FileView) GetSortMode() models.SortBy {
+	return fv.sortMode
+}
+
+// GetSortOrder returns the current sort order.
+func (fv *FileView) GetSortOrder() models.SortOrder {
+	return fv.sortOrder
 }

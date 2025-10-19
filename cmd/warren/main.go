@@ -17,6 +17,7 @@ import (
 	"github.com/lawrab/warren/internal/fileops"
 	"github.com/lawrab/warren/internal/ui"
 	"github.com/lawrab/warren/internal/version"
+	"github.com/lawrab/warren/pkg/models"
 )
 
 const appID = "com.lawrab.warren"
@@ -79,7 +80,13 @@ func activate(app *gtk.Application, cfg *config.Config) {
 	statusLabel.SetHExpand(true)
 	statusBar.Append(statusLabel)
 
-	helpLabel := gtk.NewLabel("j/k: navigate  h: up  l: enter/open  q: quit  .: toggle hidden")
+	// Add sort mode indicator
+	sortLabel := gtk.NewLabel(formatSortMode(fileView))
+	sortLabel.AddCSSClass("dim-label")
+	sortLabel.SetMarginEnd(12)
+	statusBar.Append(sortLabel)
+
+	helpLabel := gtk.NewLabel("j/k: navigate  h: up  l: enter  s: sort  .: hidden  q: quit")
 	helpLabel.AddCSSClass("dim-label")
 	statusBar.Append(helpLabel)
 
@@ -90,6 +97,11 @@ func activate(app *gtk.Application, cfg *config.Config) {
 
 	// Determine starting directory
 	startDir := getStartDirectory(cfg.General.StartDirectory)
+
+	// Apply sort mode from config
+	sortMode := parseSortMode(cfg.Appearance.DefaultSortMode)
+	sortOrder := parseSortOrder(cfg.Appearance.DefaultSortOrder)
+	fileView.SetSortMode(sortMode, sortOrder)
 
 	// Load initial directory
 	if err := fileView.LoadDirectory(startDir); err != nil {
@@ -106,6 +118,9 @@ func activate(app *gtk.Application, cfg *config.Config) {
 			log.Printf("Failed to apply show_hidden setting: %v", err)
 		}
 	}
+
+	// Update sort label to reflect initial state
+	sortLabel.SetText(formatSortMode(fileView))
 
 	// Set up keyboard event controller
 	keyController := gtk.NewEventControllerKey()
@@ -171,6 +186,16 @@ func activate(app *gtk.Application, cfg *config.Config) {
 			return true
 		}
 
+		if keyMatchesConfig(keyval, cfg.Keybindings.CycleSortMode) {
+			if err := fileView.CycleSortMode(); err != nil {
+				statusLabel.SetText(err.Error())
+			} else {
+				sortLabel.SetText(formatSortMode(fileView))
+				updateStatusBar(statusLabel, fileView)
+			}
+			return true
+		}
+
 		if keyMatchesConfig(keyval, cfg.Keybindings.Quit) {
 			window.Close()
 			return true
@@ -196,6 +221,20 @@ func updateStatusBar(label *gtk.Label, fileView *ui.FileView) {
 	} else {
 		label.SetText("Ready")
 	}
+}
+
+// formatSortMode returns a human-readable string for the current sort mode.
+// Examples: "Name ↑", "Size ↓"
+func formatSortMode(fileView *ui.FileView) string {
+	mode := fileView.GetSortMode()
+	order := fileView.GetSortOrder()
+
+	arrow := "↑"
+	if order == 1 { // SortDescending
+		arrow = "↓"
+	}
+
+	return fmt.Sprintf("Sort: %s %s", mode.String(), arrow)
 }
 
 func setupShortcuts(app *gtk.Application, window *gtk.ApplicationWindow) {
@@ -263,4 +302,32 @@ func getStartDirectory(configDir string) string {
 		return "/"
 	}
 	return homeDir
+}
+
+// parseSortMode converts a config string to a models.SortBy value.
+func parseSortMode(mode string) models.SortBy {
+	switch mode {
+	case "name", "Name":
+		return models.SortByName
+	case "size", "Size":
+		return models.SortBySize
+	case "modified", "Modified", "modtime":
+		return models.SortByModTime
+	case "extension", "Extension", "ext":
+		return models.SortByExtension
+	default:
+		return models.SortByName
+	}
+}
+
+// parseSortOrder converts a config string to a models.SortOrder value.
+func parseSortOrder(order string) models.SortOrder {
+	switch order {
+	case "ascending", "Ascending", "asc":
+		return models.SortAscending
+	case "descending", "Descending", "desc":
+		return models.SortDescending
+	default:
+		return models.SortAscending
+	}
 }

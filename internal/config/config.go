@@ -17,21 +17,24 @@ type Config struct {
 
 // AppearanceConfig controls visual appearance settings.
 type AppearanceConfig struct {
-	ShowHidden   bool `toml:"show_hidden"`   // Show hidden files by default
-	WindowWidth  int  `toml:"window_width"`  // Default window width
-	WindowHeight int  `toml:"window_height"` // Default window height
+	ShowHidden       bool   `toml:"show_hidden"`        // Show hidden files by default
+	WindowWidth      int    `toml:"window_width"`       // Default window width
+	WindowHeight     int    `toml:"window_height"`      // Default window height
+	DefaultSortMode  string `toml:"default_sort_mode"`  // Default sort mode: "name", "size", "modified", "extension"
+	DefaultSortOrder string `toml:"default_sort_order"` // Default sort order: "ascending", "descending"
 }
 
 // KeybindingsConfig defines keyboard shortcuts.
 // Each field should contain a single key name (e.g., "j", "period", "space").
 // For special keys, use GTK key names (e.g., "Return", "BackSpace", "Escape").
 type KeybindingsConfig struct {
-	Quit         string `toml:"quit"`          // Quit application
-	NavigateUp   string `toml:"navigate_up"`   // Move selection up
-	NavigateDown string `toml:"navigate_down"` // Move selection down
-	ParentDir    string `toml:"parent_dir"`    // Go to parent directory
-	EnterDir     string `toml:"enter_dir"`     // Enter directory or open file
-	ToggleHidden string `toml:"toggle_hidden"` // Toggle hidden files visibility
+	Quit          string `toml:"quit"`            // Quit application
+	NavigateUp    string `toml:"navigate_up"`     // Move selection up
+	NavigateDown  string `toml:"navigate_down"`   // Move selection down
+	ParentDir     string `toml:"parent_dir"`      // Go to parent directory
+	EnterDir      string `toml:"enter_dir"`       // Enter directory or open file
+	ToggleHidden  string `toml:"toggle_hidden"`   // Toggle hidden files visibility
+	CycleSortMode string `toml:"cycle_sort_mode"` // Cycle through sort modes
 }
 
 // GeneralConfig contains general application settings.
@@ -43,17 +46,20 @@ type GeneralConfig struct {
 func Default() *Config {
 	return &Config{
 		Appearance: AppearanceConfig{
-			ShowHidden:   false,
-			WindowWidth:  1000,
-			WindowHeight: 700,
+			ShowHidden:       false,
+			WindowWidth:      1000,
+			WindowHeight:     700,
+			DefaultSortMode:  "name",
+			DefaultSortOrder: "ascending",
 		},
 		Keybindings: KeybindingsConfig{
-			Quit:         "q",
-			NavigateUp:   "k",
-			NavigateDown: "j",
-			ParentDir:    "h",
-			EnterDir:     "l",
-			ToggleHidden: "period",
+			Quit:          "q",
+			NavigateUp:    "k",
+			NavigateDown:  "j",
+			ParentDir:     "h",
+			EnterDir:      "l",
+			ToggleHidden:  "period",
+			CycleSortMode: "s",
 		},
 		General: GeneralConfig{
 			StartDirectory: "~",
