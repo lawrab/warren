@@ -28,6 +28,7 @@ parent_dir = "h"
 enter_dir = "l"
 toggle_hidden = "period"
 cycle_sort_mode = "s"
+toggle_sort_order = "r"
 
 # Alternative keybinding examples:
 # quit = "Q"                # Capital Q

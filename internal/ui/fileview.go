@@ -159,22 +159,44 @@ func (fv *FileView) LoadDirectory(path string) error {
 	fv.files = files
 	fv.currentPath = path
 
+	// Refresh the display
+	return fv.refreshDisplay()
+}
+
+// refreshDisplay updates the GTK store and resets selection.
+// This is a helper method used by LoadDirectory and Refresh.
+func (fv *FileView) refreshDisplay() error {
 	// Clear the store
 	fv.store.RemoveAll()
 
 	// Add files to store (we use StringObject as placeholders)
-	for i := range files {
+	for i := range fv.files {
 		obj := gtk.NewStringObject(fmt.Sprintf("%d", i))
 		fv.store.Append(obj.Object)
 	}
 
 	// Reset selection
 	fv.selectedIndex = -1
-	if len(files) > 0 {
+	if len(fv.files) > 0 {
 		fv.SelectIndex(0)
 	}
 
 	return nil
+}
+
+// Refresh re-sorts and refreshes the display without reloading from disk.
+// This is much faster than LoadDirectory for operations that only change
+// the sort order or mode.
+func (fv *FileView) Refresh() error {
+	if len(fv.files) == 0 {
+		return nil
+	}
+
+	// Re-sort existing files
+	fileops.SortFiles(fv.files, fv.sortMode, fv.sortOrder)
+
+	// Refresh the display
+	return fv.refreshDisplay()
 }
 
 // SelectIndex selects the file at the given index.
@@ -299,8 +321,8 @@ func (fv *FileView) CycleSortMode() error {
 		fv.sortMode = models.SortByName
 	}
 
-	// Re-sort and refresh the display
-	return fv.LoadDirectory(fv.currentPath)
+	// Re-sort and refresh the display (no disk I/O needed)
+	return fv.Refresh()
 }
 
 // GetSortMode returns the current sort mode.
@@ -311,4 +333,16 @@ func (fv *FileView) GetSortMode() models.SortBy {
 // GetSortOrder returns the current sort order.
 func (fv *FileView) GetSortOrder() models.SortOrder {
 	return fv.sortOrder
+}
+
+// ToggleSortOrder toggles between ascending and descending sort order.
+func (fv *FileView) ToggleSortOrder() error {
+	if fv.sortOrder == models.SortAscending {
+		fv.sortOrder = models.SortDescending
+	} else {
+		fv.sortOrder = models.SortAscending
+	}
+
+	// Re-sort and refresh the display (no disk I/O needed)
+	return fv.Refresh()
 }

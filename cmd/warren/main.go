@@ -86,7 +86,7 @@ func activate(app *gtk.Application, cfg *config.Config) {
 	sortLabel.SetMarginEnd(12)
 	statusBar.Append(sortLabel)
 
-	helpLabel := gtk.NewLabel("j/k: navigate  h: up  l: enter  s: sort  .: hidden  q: quit")
+	helpLabel := gtk.NewLabel("j/k: navigate  h: up  l: enter  s: sort  r: reverse  .: hidden  q: quit")
 	helpLabel.AddCSSClass("dim-label")
 	statusBar.Append(helpLabel)
 
@@ -188,6 +188,16 @@ func activate(app *gtk.Application, cfg *config.Config) {
 
 		if keyMatchesConfig(keyval, cfg.Keybindings.CycleSortMode) {
 			if err := fileView.CycleSortMode(); err != nil {
+				statusLabel.SetText(err.Error())
+			} else {
+				sortLabel.SetText(formatSortMode(fileView))
+				updateStatusBar(statusLabel, fileView)
+			}
+			return true
+		}
+
+		if keyMatchesConfig(keyval, cfg.Keybindings.ToggleSortOrder) {
+			if err := fileView.ToggleSortOrder(); err != nil {
 				statusLabel.SetText(err.Error())
 			} else {
 				sortLabel.SetText(formatSortMode(fileView))
