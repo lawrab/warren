@@ -312,3 +312,15 @@ func (fv *FileView) GetSortMode() models.SortBy {
 func (fv *FileView) GetSortOrder() models.SortOrder {
 	return fv.sortOrder
 }
+
+// ToggleSortOrder toggles between ascending and descending sort order.
+func (fv *FileView) ToggleSortOrder() error {
+	if fv.sortOrder == models.SortAscending {
+		fv.sortOrder = models.SortDescending
+	} else {
+		fv.sortOrder = models.SortAscending
+	}
+
+	// Re-sort and refresh the display
+	return fv.LoadDirectory(fv.currentPath)
+}

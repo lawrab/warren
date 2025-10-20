@@ -28,13 +28,14 @@ type AppearanceConfig struct {
 // Each field should contain a single key name (e.g., "j", "period", "space").
 // For special keys, use GTK key names (e.g., "Return", "BackSpace", "Escape").
 type KeybindingsConfig struct {
-	Quit          string `toml:"quit"`            // Quit application
-	NavigateUp    string `toml:"navigate_up"`     // Move selection up
-	NavigateDown  string `toml:"navigate_down"`   // Move selection down
-	ParentDir     string `toml:"parent_dir"`      // Go to parent directory
-	EnterDir      string `toml:"enter_dir"`       // Enter directory or open file
-	ToggleHidden  string `toml:"toggle_hidden"`   // Toggle hidden files visibility
-	CycleSortMode string `toml:"cycle_sort_mode"` // Cycle through sort modes
+	Quit            string `toml:"quit"`              // Quit application
+	NavigateUp      string `toml:"navigate_up"`       // Move selection up
+	NavigateDown    string `toml:"navigate_down"`     // Move selection down
+	ParentDir       string `toml:"parent_dir"`        // Go to parent directory
+	EnterDir        string `toml:"enter_dir"`         // Enter directory or open file
+	ToggleHidden    string `toml:"toggle_hidden"`     // Toggle hidden files visibility
+	CycleSortMode   string `toml:"cycle_sort_mode"`   // Cycle through sort modes
+	ToggleSortOrder string `toml:"toggle_sort_order"` // Toggle sort order (ascending/descending)
 }
 
 // GeneralConfig contains general application settings.
@@ -53,13 +54,14 @@ func Default() *Config {
 			DefaultSortOrder: "ascending",
 		},
 		Keybindings: KeybindingsConfig{
-			Quit:          "q",
-			NavigateUp:    "k",
-			NavigateDown:  "j",
-			ParentDir:     "h",
-			EnterDir:      "l",
-			ToggleHidden:  "period",
-			CycleSortMode: "s",
+			Quit:            "q",
+			NavigateUp:      "k",
+			NavigateDown:    "j",
+			ParentDir:       "h",
+			EnterDir:        "l",
+			ToggleHidden:    "period",
+			CycleSortMode:   "s",
+			ToggleSortOrder: "r",
 		},
 		General: GeneralConfig{
 			StartDirectory: "~",
