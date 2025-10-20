@@ -1,6 +1,6 @@
 # Warren
 
-[![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)](https://github.com/lawrab/warren/releases)
+[![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/lawrab/warren/releases)
 [![Go](https://img.shields.io/badge/go-1.25+-00ADD8.svg)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-TBD-lightgrey.svg)](LICENSE)
 
@@ -24,19 +24,21 @@ Existing file managers are built for traditional desktop environments. Warren em
 
 ## Project Status
 
-**Version 0.1.0** - Phase 1 MVP (Partial)
+**Version 0.1.1** - Phase 1 MVP Complete! 🎉
 
-✅ **Working Features:**
-- Directory browsing with file metadata
-- Vim-style keyboard navigation (j/k/h/l)
-- Open files with default applications
-- Toggle hidden files
-- Three-column view (Name, Size, Modified)
+✅ **Completed Features:**
+- Directory browsing with file metadata (Name, Size, Modified)
+- Vim-style keyboard navigation (j/k/h/l + arrow keys)
+- Open files with default applications (xdg-open)
+- Toggle hidden files (. key)
+- Configurable keybindings (TOML configuration)
+- Multiple sort modes (name, size, modified, extension)
+- Sort order toggle (ascending/descending)
+- Performance optimized for large directories
+- CI/CD pipeline with automated testing
 
-🚧 **In Progress:**
-- Configuration file support
-- Sorting options
-- Hyprland integration
+🚧 **Next Phase:**
+- Phase 2: Hyprland Integration (IPC, workspace awareness)
 
 See [docs/PHASES.md](docs/PHASES.md) for the complete development roadmap.
 
@@ -83,8 +85,12 @@ go build -o warren cmd/warren/main.go && ./warren
 - **j/k** or **↑/↓** - Navigate up/down
 - **h** or **←/Backspace** - Go to parent directory
 - **l** or **→/Enter** - Enter directory or open file
+- **s** - Cycle sort mode (name → size → modified → extension)
+- **r** - Reverse sort order (ascending ↔ descending)
 - **.** (period) - Toggle hidden files
 - **q** or **Ctrl+Q** - Quit
+
+All keybindings are customizable via `~/.config/warren/config.toml`
 
 ## Philosophy
 
