@@ -143,12 +143,18 @@ func TestDebouncer_StopOnNoPendingCallsIsSafe(t *testing.T) {
 
 	// Use it after stopping
 	executed := false
+	var mu sync.Mutex
+
 	debouncer.Debounce(func() {
+		mu.Lock()
 		executed = true
+		mu.Unlock()
 	})
 
 	time.Sleep(100 * time.Millisecond)
 
+	mu.Lock()
+	defer mu.Unlock()
 	if !executed {
 		t.Error("Function didn't execute after Stop() and subsequent Debounce()")
 	}
