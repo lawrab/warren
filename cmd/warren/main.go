@@ -220,6 +220,14 @@ func activate(app *gtk.Application, cfg *config.Config) {
 	// Keyboard shortcuts
 	setupShortcuts(app, window)
 
+	// Cleanup file watcher when window closes
+	window.ConnectCloseRequest(func() bool {
+		if err := fileView.Close(); err != nil {
+			log.Printf("Warning: Failed to close file watcher: %v", err)
+		}
+		return false // Allow window to close
+	})
+
 	// Show window
 	window.Present()
 }
