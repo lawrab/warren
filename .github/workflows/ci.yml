@@ -58,6 +58,11 @@ jobs:
           name: coverage-report
           path: coverage.out
           retention-days: 7
+      
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   # Lint job - runs golangci-lint
   lint:
