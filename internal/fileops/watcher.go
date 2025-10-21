@@ -3,6 +3,7 @@ package fileops
 import (
 	"log"
 	"sync"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -83,6 +84,10 @@ func (fw *FileWatcher) Stop() error {
 
 // eventLoop runs in a goroutine and processes file system events.
 func (fw *FileWatcher) eventLoop() {
+	// Create debouncer to coalesce rapid file changes
+	debouncer := NewDebouncer(100 * time.Millisecond)
+	defer debouncer.Stop()
+
 	for {
 		select {
 		case event, ok := <-fw.watcher.Events:
@@ -90,14 +95,15 @@ func (fw *FileWatcher) eventLoop() {
 				return
 			}
 
-			// Log the event for debugging
-			log.Printf("File watcher event: %s %s", event.Op, event.Name)
-
 			// Call onChange callback for relevant events
 			// We care about: Create, Write, Remove, Rename
 			if event.Op&(fsnotify.Create|fsnotify.Write|fsnotify.Remove|fsnotify.Rename) != 0 {
+				// Log only events we're acting on
+				log.Printf("File watcher event: %s %s", event.Op, event.Name)
+
 				if fw.onChange != nil {
-					fw.onChange()
+					// Debounce the callback to avoid excessive reloads
+					debouncer.Debounce(fw.onChange)
 				}
 			}
 
