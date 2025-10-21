@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"log"
 	"path/filepath"
 	"time"
 
@@ -23,6 +24,7 @@ type FileView struct {
 	showHidden    bool
 	sortMode      models.SortBy
 	sortOrder     models.SortOrder
+	watcher       *fileops.FileWatcher
 }
 
 // NewFileView creates a new file listing widget.
@@ -34,6 +36,25 @@ func NewFileView() *FileView {
 		sortMode:      models.SortByName,
 		sortOrder:     models.SortAscending,
 	}
+
+	// Create file watcher with onChange callback
+	// The callback uses glib.IdleAdd for thread-safe GTK updates
+	watcher, err := fileops.NewFileWatcher(func() {
+		// This runs in a goroutine, so use IdleAdd for GTK thread safety
+		glib.IdleAdd(func() {
+			if fv.currentPath != "" {
+				// Reload the current directory
+				if err := fv.LoadDirectory(fv.currentPath); err != nil {
+					log.Printf("Failed to reload directory after file change: %v", err)
+				}
+			}
+		})
+	})
+	if err != nil {
+		log.Printf("Warning: Failed to create file watcher: %v", err)
+		// Continue without watcher - not critical
+	}
+	fv.watcher = watcher
 
 	// Create list store to hold file data
 	fv.store = gio.NewListStore(glib.TypeObject)
@@ -158,6 +179,14 @@ func (fv *FileView) LoadDirectory(path string) error {
 
 	fv.files = files
 	fv.currentPath = path
+
+	// Start watching the new directory
+	if fv.watcher != nil {
+		if err := fv.watcher.Start(path); err != nil {
+			log.Printf("Warning: Failed to watch directory %s: %v", path, err)
+			// Continue without watching - not critical
+		}
+	}
 
 	// Refresh the display
 	return fv.refreshDisplay()
@@ -345,4 +374,13 @@ func (fv *FileView) ToggleSortOrder() error {
 
 	// Re-sort and refresh the display (no disk I/O needed)
 	return fv.Refresh()
+}
+
+// Close stops the file watcher and cleans up resources.
+// This should be called when the FileView is no longer needed.
+func (fv *FileView) Close() error {
+	if fv.watcher != nil {
+		return fv.watcher.Stop()
+	}
+	return nil
 }
