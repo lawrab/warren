@@ -7,7 +7,7 @@ import (
 )
 
 func TestDebouncer_BasicDebouncing(t *testing.T) {
-	debouncer := NewDebouncer(50 * time.Millisecond)
+	debouncer := NewDebouncer(25 * time.Millisecond)
 	defer debouncer.Stop()
 
 	callCount := 0
@@ -22,11 +22,11 @@ func TestDebouncer_BasicDebouncing(t *testing.T) {
 	// Rapidly call debounce multiple times
 	for i := 0; i < 10; i++ {
 		debouncer.Debounce(increment)
-		time.Sleep(5 * time.Millisecond) // Small delay between calls
+		time.Sleep(2 * time.Millisecond) // Small delay between calls
 	}
 
 	// Wait for debounce timeout plus some buffer
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 
 	mu.Lock()
 	defer mu.Unlock()
@@ -38,7 +38,7 @@ func TestDebouncer_BasicDebouncing(t *testing.T) {
 }
 
 func TestDebouncer_ExecutesAfterTimeout(t *testing.T) {
-	timeout := 30 * time.Millisecond
+	timeout := 15 * time.Millisecond
 	debouncer := NewDebouncer(timeout)
 	defer debouncer.Stop()
 
@@ -59,7 +59,7 @@ func TestDebouncer_ExecutesAfterTimeout(t *testing.T) {
 	mu.Unlock()
 
 	// Wait for timeout
-	time.Sleep(timeout + 10*time.Millisecond)
+	time.Sleep(timeout + 5*time.Millisecond)
 
 	// Should have executed now
 	mu.Lock()
@@ -70,7 +70,7 @@ func TestDebouncer_ExecutesAfterTimeout(t *testing.T) {
 }
 
 func TestDebouncer_StopCancelsPending(t *testing.T) {
-	debouncer := NewDebouncer(50 * time.Millisecond)
+	debouncer := NewDebouncer(25 * time.Millisecond)
 
 	executed := false
 	var mu sync.Mutex
@@ -85,7 +85,7 @@ func TestDebouncer_StopCancelsPending(t *testing.T) {
 	debouncer.Stop()
 
 	// Wait longer than timeout
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 
 	// Should not have executed
 	mu.Lock()
@@ -96,7 +96,7 @@ func TestDebouncer_StopCancelsPending(t *testing.T) {
 }
 
 func TestDebouncer_MultipleDebounceCallsResetTimer(t *testing.T) {
-	timeout := 40 * time.Millisecond
+	timeout := 20 * time.Millisecond
 	debouncer := NewDebouncer(timeout)
 	defer debouncer.Stop()
 
@@ -111,12 +111,12 @@ func TestDebouncer_MultipleDebounceCallsResetTimer(t *testing.T) {
 
 	// Call debounce, then call it again before timeout expires
 	debouncer.Debounce(increment)
-	time.Sleep(20 * time.Millisecond) // Half the timeout
+	time.Sleep(10 * time.Millisecond) // Half the timeout
 
 	debouncer.Debounce(increment)     // This should reset the timer
-	time.Sleep(20 * time.Millisecond) // Another half timeout
+	time.Sleep(10 * time.Millisecond) // Another half timeout
 
-	// At this point, 40ms total has passed, but timer was reset at 20ms
+	// At this point, 20ms total has passed, but timer was reset at 10ms
 	// So function should not have executed yet
 	mu.Lock()
 	if callCount != 0 {
@@ -125,7 +125,7 @@ func TestDebouncer_MultipleDebounceCallsResetTimer(t *testing.T) {
 	mu.Unlock()
 
 	// Wait for the reset timer to expire
-	time.Sleep(30 * time.Millisecond)
+	time.Sleep(15 * time.Millisecond)
 
 	mu.Lock()
 	defer mu.Unlock()
@@ -135,7 +135,7 @@ func TestDebouncer_MultipleDebounceCallsResetTimer(t *testing.T) {
 }
 
 func TestDebouncer_StopOnNoPendingCallsIsSafe(t *testing.T) {
-	debouncer := NewDebouncer(50 * time.Millisecond)
+	debouncer := NewDebouncer(25 * time.Millisecond)
 
 	// Should not panic
 	debouncer.Stop()
@@ -151,7 +151,7 @@ func TestDebouncer_StopOnNoPendingCallsIsSafe(t *testing.T) {
 		mu.Unlock()
 	})
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(50 * time.Millisecond)
 
 	mu.Lock()
 	defer mu.Unlock()
@@ -161,7 +161,7 @@ func TestDebouncer_StopOnNoPendingCallsIsSafe(t *testing.T) {
 }
 
 func TestDebouncer_DifferentFunctions(t *testing.T) {
-	debouncer := NewDebouncer(30 * time.Millisecond)
+	debouncer := NewDebouncer(15 * time.Millisecond)
 	defer debouncer.Stop()
 
 	firstCalled := false
@@ -176,7 +176,7 @@ func TestDebouncer_DifferentFunctions(t *testing.T) {
 	})
 
 	// Schedule second function (should cancel first)
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(5 * time.Millisecond)
 	debouncer.Debounce(func() {
 		mu.Lock()
 		secondCalled = true
@@ -184,7 +184,7 @@ func TestDebouncer_DifferentFunctions(t *testing.T) {
 	})
 
 	// Wait for timeout
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(25 * time.Millisecond)
 
 	mu.Lock()
 	defer mu.Unlock()
