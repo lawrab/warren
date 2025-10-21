@@ -1,0 +1,40 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 70%  # Target for testable code
+        threshold: 5%  # Allow 5% drop before failing
+    patch:
+      default:
+        target: 60%  # New code should be reasonably tested
+
+ignore:
+  # GTK4 UI code - excluded from coverage because:
+  # - Requires X11/Wayland display server to test
+  # - GTK widget testing requires complex mocking/integration setup
+  # - UI logic is verified through manual testing and integration tests
+  # - Industry standard is to exclude UI framework code from unit test coverage
+  - "internal/ui/**"
+
+  # Main entry point - excluded because:
+  # - Minimal logic (just initialization and GTK app setup)
+  # - Tested implicitly through integration tests
+  # - Cannot run without display server in CI
+  - "cmd/warren/main.go"
+
+  # File watcher - excluded because:
+  # - Heavy use of goroutines and fsnotify makes unit testing complex
+  # - Requires filesystem operations and timing-dependent behavior
+  # - Functionality verified through integration testing
+  - "internal/fileops/watcher.go"
+
+  # File opening - excluded because:
+  # - Requires xdg-open and external applications
+  # - System-dependent behavior (different DEs handle differently)
+  # - Verified through manual testing on target environment
+  - "internal/fileops/open.go"
+
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false
