@@ -76,6 +76,12 @@ func NewFileView() *FileView {
 	fv.widget.SetVExpand(true)
 	fv.widget.SetHExpand(true)
 
+	// Configure scrolling policy
+	// Never show horizontal scrollbar, automatically show vertical scrollbar when needed
+	fv.widget.SetPolicy(gtk.PolicyNever, gtk.PolicyAutomatic)
+	// Don't propagate natural height - allow scrolling instead of expanding infinitely
+	fv.widget.SetPropagateNaturalHeight(false)
+
 	return fv
 }
 
@@ -238,6 +244,10 @@ func (fv *FileView) SelectIndex(index int) {
 	model := fv.listView.Model()
 	selection := model.Cast().(*gtk.SingleSelection)
 	selection.SetSelected(uint(index))
+
+	// Scroll to make the selected item visible (only scrolls if needed)
+	// gtk.ListScrollNone means scroll minimally - just enough to make it visible
+	fv.listView.ScrollTo(uint(index), nil, gtk.ListScrollNone, nil)
 }
 
 // SelectNext moves selection down one item.
