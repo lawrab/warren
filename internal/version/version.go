@@ -11,10 +11,10 @@ const (
 	Major = 0
 
 	// Minor version number
-	Minor = 1
+	Minor = 2
 
 	// Patch version number
-	Patch = 1
+	Patch = 0
 
 	// PreRelease is for pre-release versions (e.g., "alpha", "beta", "rc.1")
 	// Empty string for stable releases

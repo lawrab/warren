@@ -13,6 +13,7 @@ type Config struct {
 	Appearance  AppearanceConfig  `toml:"appearance"`
 	Keybindings KeybindingsConfig `toml:"keybindings"`
 	General     GeneralConfig     `toml:"general"`
+	Hyprland    HyprlandConfig    `toml:"hyprland"`
 }
 
 // AppearanceConfig controls visual appearance settings.
@@ -43,6 +44,13 @@ type GeneralConfig struct {
 	StartDirectory string `toml:"start_directory"` // Starting directory ("~", "/", or "last")
 }
 
+// HyprlandConfig controls Hyprland integration features.
+type HyprlandConfig struct {
+	Enabled         bool `toml:"enabled"`          // Enable Hyprland integration (auto-detected if not set)
+	WorkspaceMemory bool `toml:"workspace_memory"` // Remember directory per workspace
+	AutoSwitch      bool `toml:"auto_switch"`      // Auto-switch to remembered directory on workspace change
+}
+
 // Default returns a Config with sensible default values.
 func Default() *Config {
 	return &Config{
@@ -65,6 +73,11 @@ func Default() *Config {
 		},
 		General: GeneralConfig{
 			StartDirectory: "~",
+		},
+		Hyprland: HyprlandConfig{
+			Enabled:         true, // Auto-enabled if running in Hyprland
+			WorkspaceMemory: true,
+			AutoSwitch:      true,
 		},
 	}
 }
