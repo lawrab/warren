@@ -58,6 +58,20 @@ func IsHyprland() bool {
 	return os.Getenv("HYPRLAND_INSTANCE_SIGNATURE") != ""
 }
 
+// getRuntimeDir returns the Hyprland runtime directory.
+// Follows the same logic as hyprctl: checks XDG_RUNTIME_DIR first,
+// then falls back to /run/user/$UID.
+func getRuntimeDir() string {
+	// Check XDG_RUNTIME_DIR first (standard)
+	if xdg := os.Getenv("XDG_RUNTIME_DIR"); xdg != "" {
+		return fmt.Sprintf("%s/hypr", xdg)
+	}
+
+	// Fallback to /run/user/$UID (same as hyprctl)
+	uid := os.Getuid()
+	return fmt.Sprintf("/run/user/%d/hypr", uid)
+}
+
 // New creates a new Hyprland IPC client.
 // Returns an error if not running under Hyprland.
 func New() (*Client, error) {
@@ -66,8 +80,9 @@ func New() (*Client, error) {
 		return nil, fmt.Errorf("not running under Hyprland (HYPRLAND_INSTANCE_SIGNATURE not set)")
 	}
 
-	commandSocket := fmt.Sprintf("/tmp/hypr/%s/.socket.sock", sig)
-	eventSocket := fmt.Sprintf("/tmp/hypr/%s/.socket2.sock", sig)
+	runtimeDir := getRuntimeDir()
+	commandSocket := fmt.Sprintf("%s/%s/.socket.sock", runtimeDir, sig)
+	eventSocket := fmt.Sprintf("%s/%s/.socket2.sock", runtimeDir, sig)
 
 	// Verify command socket exists
 	if _, err := os.Stat(commandSocket); err != nil {

@@ -445,9 +445,24 @@ func startHyprlandListener(hs *hyprlandState, cfg *config.Config, fileView *ui.F
 
 	go func() {
 		err := hs.client.ListenEvents(func(event hyprland.Event) {
-			if event.Type == "workspace" && cfg.Hyprland.AutoSwitch && hs.memory != nil {
-				// Parse workspace ID from event data
-				workspaceID, err := strconv.Atoi(strings.TrimSpace(event.Data))
+			// Handle both workspace switches and Warren being moved between workspaces
+			if (event.Type == "workspace" || event.Type == "movewindow") && cfg.Hyprland.AutoSwitch && hs.memory != nil {
+				var workspaceID int
+				var err error
+
+				if event.Type == "workspace" {
+					// workspace>>2 - user switched to workspace 2
+					workspaceID, err = strconv.Atoi(strings.TrimSpace(event.Data))
+				} else if event.Type == "movewindow" {
+					// movewindow>>windowaddr,3 - window moved to workspace 3
+					// Parse: "122e5f40,3" -> workspace ID is 3
+					parts := strings.Split(event.Data, ",")
+					if len(parts) < 2 {
+						return
+					}
+					workspaceID, err = strconv.Atoi(strings.TrimSpace(parts[1]))
+				}
+
 				if err != nil {
 					log.Printf("Failed to parse workspace ID from event: %v", err)
 					return
@@ -474,7 +489,6 @@ func startHyprlandListener(hs *hyprlandState, cfg *config.Config, fileView *ui.F
 					} else {
 						pathLabel.SetText(fileView.GetCurrentPath())
 						updateStatusBar(statusLabel, fileView)
-						log.Printf("Switched to workspace %d directory: %s", workspaceID, rememberedDir)
 					}
 				})
 			}

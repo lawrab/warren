@@ -2,7 +2,6 @@ package hyprland
 
 import (
 	"encoding/json"
-	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -121,30 +120,35 @@ func TestNewWithMockSocket(t *testing.T) {
 
 	// Save and restore original env
 	origSig := os.Getenv("HYPRLAND_INSTANCE_SIGNATURE")
-	defer os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", origSig)
+	origXDG := os.Getenv("XDG_RUNTIME_DIR")
+	defer func() {
+		os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", origSig)
+		if origXDG != "" {
+			os.Setenv("XDG_RUNTIME_DIR", origXDG)
+		} else {
+			os.Unsetenv("XDG_RUNTIME_DIR")
+		}
+	}()
 
-	// Override /tmp/hypr path by setting signature
+	// Set test environment to use tmpDir
 	os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", signature)
+	os.Setenv("XDG_RUNTIME_DIR", tmpDir)
 
-	// Temporarily modify the client creation to use tmpDir
-	// This test verifies the socket path construction logic
-	expectedCommandSocket := fmt.Sprintf("/tmp/hypr/%s/.socket.sock", signature)
-	expectedEventSocket := fmt.Sprintf("/tmp/hypr/%s/.socket2.sock", signature)
-
-	// Since we can't easily mock filesystem paths without changing the code,
-	// we'll just verify the path construction logic
-	if sig := os.Getenv("HYPRLAND_INSTANCE_SIGNATURE"); sig == "" {
-		t.Fatal("Signature should be set")
+	// Create client - should succeed with mocked XDG_RUNTIME_DIR
+	client, err := New()
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
 	}
 
-	commandSocket := fmt.Sprintf("/tmp/hypr/%s/.socket.sock", signature)
-	eventSocket := fmt.Sprintf("/tmp/hypr/%s/.socket2.sock", signature)
+	// Verify socket paths use XDG_RUNTIME_DIR
+	expectedCommandSocket := filepath.Join(tmpDir, "hypr", signature, ".socket.sock")
+	expectedEventSocket := filepath.Join(tmpDir, "hypr", signature, ".socket2.sock")
 
-	if commandSocket != expectedCommandSocket {
-		t.Errorf("commandSocket = %v, want %v", commandSocket, expectedCommandSocket)
+	if client.commandSocket != expectedCommandSocket {
+		t.Errorf("commandSocket = %v, want %v", client.commandSocket, expectedCommandSocket)
 	}
-	if eventSocket != expectedEventSocket {
-		t.Errorf("eventSocket = %v, want %v", eventSocket, expectedEventSocket)
+	if client.eventSocket != expectedEventSocket {
+		t.Errorf("eventSocket = %v, want %v", client.eventSocket, expectedEventSocket)
 	}
 }
 

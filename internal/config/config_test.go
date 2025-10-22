@@ -195,3 +195,50 @@ quit = "Q"
 		t.Errorf("Expected StartDirectory default ('~'), got %s", cfg.General.StartDirectory)
 	}
 }
+
+func TestLoadWithPartialHyprlandSection(t *testing.T) {
+	// Create temporary directory for testing
+	tmpDir := t.TempDir()
+
+	// Override the config path for testing
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	// Create a config file with partial Hyprland section (some fields missing)
+	partialConfig := `[appearance]
+show_hidden = false
+
+[hyprland]
+enabled = false
+# workspace_memory and auto_switch are missing
+`
+
+	// Write partial config
+	configDir := filepath.Join(tmpDir, "warren")
+	if err := os.MkdirAll(configDir, 0700); err != nil {
+		t.Fatalf("Failed to create config dir: %v", err)
+	}
+
+	configPath := filepath.Join(configDir, "config.toml")
+	if err := os.WriteFile(configPath, []byte(partialConfig), 0600); err != nil {
+		t.Fatalf("Failed to write partial config: %v", err)
+	}
+
+	// Load config
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Failed to load partial config: %v", err)
+	}
+
+	// Verify user-specified value was loaded
+	if cfg.Hyprland.Enabled != false {
+		t.Errorf("Expected Hyprland.Enabled to be false (from config), got %v", cfg.Hyprland.Enabled)
+	}
+
+	// Verify missing fields got defaults
+	if cfg.Hyprland.WorkspaceMemory != true {
+		t.Errorf("Expected Hyprland.WorkspaceMemory default (true), got %v", cfg.Hyprland.WorkspaceMemory)
+	}
+	if cfg.Hyprland.AutoSwitch != true {
+		t.Errorf("Expected Hyprland.AutoSwitch default (true), got %v", cfg.Hyprland.AutoSwitch)
+	}
+}

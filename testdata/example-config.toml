@@ -46,3 +46,19 @@ toggle_sort_order = "r"
 #   "/path" - Any absolute path
 #   "last"  - Remember last directory (not yet implemented)
 start_directory = "~"
+
+[hyprland]
+# Hyprland window manager integration
+# These features are automatically enabled when running in Hyprland
+# and gracefully disabled otherwise.
+
+# Enable Hyprland integration (auto-detected by default)
+enabled = true
+
+# Remember the last directory accessed in each workspace
+# When you switch workspaces, Warren will remember where you were
+workspace_memory = true
+
+# Automatically switch to the remembered directory when changing workspaces
+# Requires workspace_memory to be enabled
+auto_switch = true
