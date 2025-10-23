@@ -1,6 +1,6 @@
 # Warren
 
-[![Version](https://img.shields.io/badge/version-0.1.1-blue.svg)](https://github.com/lawrab/warren/releases)
+[![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)](https://github.com/lawrab/warren/releases)
 [![Go](https://img.shields.io/badge/go-1.25+-00ADD8.svg)](https://go.dev/)
 [![codecov](https://codecov.io/gh/lawrab/warren/branch/main/graph/badge.svg)](https://codecov.io/gh/lawrab/warren)
 [![License](https://img.shields.io/badge/license-TBD-lightgrey.svg)](LICENSE)
@@ -25,9 +25,11 @@ Existing file managers are built for traditional desktop environments. Warren em
 
 ## Project Status
 
-**Version 0.1.1** - Phase 1 MVP Complete! 🎉
+**Version 0.2.0** - Phase 2 Hyprland Integration Complete! 🎉
 
 ✅ **Completed Features:**
+
+**Phase 1 - Core File Manager:**
 - Directory browsing with file metadata (Name, Size, Modified)
 - Vim-style keyboard navigation (j/k/h/l + arrow keys)
 - Open files with default applications (xdg-open)
@@ -38,8 +40,15 @@ Existing file managers are built for traditional desktop environments. Warren em
 - Performance optimized for large directories
 - CI/CD pipeline with automated testing
 
+**Phase 2 - Hyprland Integration:**
+- Hyprland IPC client with command and event support
+- Per-workspace directory memory
+- Automatic directory switching on workspace change
+- Graceful degradation in non-Hyprland environments
+- Persistent workspace memory (saved across sessions)
+
 🚧 **Next Phase:**
-- Phase 2: Hyprland Integration (IPC, workspace awareness)
+- Phase 3: Power Features (file operations, dual-pane mode, search)
 
 See [docs/PHASES.md](docs/PHASES.md) for the complete development roadmap.
 
@@ -92,6 +101,23 @@ go build -o warren cmd/warren/main.go && ./warren
 - **q** or **Ctrl+Q** - Quit
 
 All keybindings are customizable via `~/.config/warren/config.toml`
+
+### Hyprland Integration
+
+Warren automatically detects and integrates with Hyprland when running in a Hyprland session. Configuration options:
+
+```toml
+[hyprland]
+enabled = true           # Enable Hyprland integration (auto-detected)
+workspace_memory = true  # Remember directory per workspace
+auto_switch = true       # Auto-switch to remembered directory on workspace change
+```
+
+**Features:**
+- Remembers the last directory accessed in each workspace
+- Automatically switches to the remembered directory when you switch workspaces
+- Persists workspace memory across sessions (`~/.config/warren/hyprland-memory.json`)
+- Gracefully degrades when not running in Hyprland
 
 ## Philosophy
 
