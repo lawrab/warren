@@ -160,7 +160,7 @@ jobs:
 
       - name: Build
         run: |
-          CGO_ENABLED=1 go build -v -o warren cmd/warren/main.go
+          CGO_ENABLED=1 go build -v -o warren ./cmd/warren
 
       - name: Verify binary
         run: |
