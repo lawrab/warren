@@ -152,6 +152,55 @@ func activate(app *gtk.Application, cfg *config.Config) {
 	startHyprlandListener(hyprState, cfg, fileView, pathLabel, statusLabel)
 
 	// Set up keyboard event controller
+	keyController := setupKeyboardHandler(cfg, fileView, pathLabel, statusLabel, sortLabel, window, hyprState)
+	window.AddController(keyController)
+
+	// Keyboard shortcuts
+	setupShortcuts(app, window)
+
+	// Cleanup file watcher and save workspace memory when window closes
+	window.ConnectCloseRequest(func() bool {
+		if err := fileView.Close(); err != nil {
+			log.Printf("Warning: Failed to close file watcher: %v", err)
+		}
+		// Save workspace memory on exit
+		if hyprState != nil && hyprState.memory != nil {
+			if err := hyprState.memory.Save(); err != nil {
+				log.Printf("Warning: Failed to save workspace memory: %v", err)
+			}
+		}
+		return false // Allow window to close
+	})
+
+	// Show window
+	window.Present()
+}
+
+func updateStatusBar(label *gtk.Label, fileView *ui.FileView) {
+	selected := fileView.GetSelected()
+	if selected != nil {
+		label.SetText(selected.Path)
+	} else {
+		label.SetText("Ready")
+	}
+}
+
+// formatSortMode returns a human-readable string for the current sort mode.
+// Examples: "Name ↑", "Size ↓"
+func formatSortMode(fileView *ui.FileView) string {
+	mode := fileView.GetSortMode()
+	order := fileView.GetSortOrder()
+
+	arrow := "↑"
+	if order == 1 { // SortDescending
+		arrow = "↓"
+	}
+
+	return fmt.Sprintf("Sort: %s %s", mode.String(), arrow)
+}
+
+// setupKeyboardHandler creates and configures the keyboard event controller.
+func setupKeyboardHandler(cfg *config.Config, fileView *ui.FileView, pathLabel, statusLabel, sortLabel *gtk.Label, window *gtk.ApplicationWindow, hyprState *hyprlandState) *gtk.EventControllerKey {
 	keyController := gtk.NewEventControllerKey()
 	keyController.ConnectKeyPressed(func(keyval uint, _ uint, _ gdk.ModifierType) bool {
 		// Convert pressed key to string for comparison
@@ -247,51 +296,7 @@ func activate(app *gtk.Application, cfg *config.Config) {
 		_ = keyName // Keep for potential debugging
 		return false
 	})
-
-	window.AddController(keyController)
-
-	// Keyboard shortcuts
-	setupShortcuts(app, window)
-
-	// Cleanup file watcher and save workspace memory when window closes
-	window.ConnectCloseRequest(func() bool {
-		if err := fileView.Close(); err != nil {
-			log.Printf("Warning: Failed to close file watcher: %v", err)
-		}
-		// Save workspace memory on exit
-		if hyprState != nil && hyprState.memory != nil {
-			if err := hyprState.memory.Save(); err != nil {
-				log.Printf("Warning: Failed to save workspace memory: %v", err)
-			}
-		}
-		return false // Allow window to close
-	})
-
-	// Show window
-	window.Present()
-}
-
-func updateStatusBar(label *gtk.Label, fileView *ui.FileView) {
-	selected := fileView.GetSelected()
-	if selected != nil {
-		label.SetText(selected.Path)
-	} else {
-		label.SetText("Ready")
-	}
-}
-
-// formatSortMode returns a human-readable string for the current sort mode.
-// Examples: "Name ↑", "Size ↓"
-func formatSortMode(fileView *ui.FileView) string {
-	mode := fileView.GetSortMode()
-	order := fileView.GetSortOrder()
-
-	arrow := "↑"
-	if order == 1 { // SortDescending
-		arrow = "↓"
-	}
-
-	return fmt.Sprintf("Sort: %s %s", mode.String(), arrow)
+	return keyController
 }
 
 func setupShortcuts(app *gtk.Application, window *gtk.ApplicationWindow) {
@@ -450,10 +455,11 @@ func startHyprlandListener(hs *hyprlandState, cfg *config.Config, fileView *ui.F
 				var workspaceID int
 				var err error
 
-				if event.Type == "workspace" {
+				switch event.Type {
+				case "workspace":
 					// workspace>>2 - user switched to workspace 2
 					workspaceID, err = strconv.Atoi(strings.TrimSpace(event.Data))
-				} else if event.Type == "movewindow" {
+				case "movewindow":
 					// movewindow>>windowaddr,3 - window moved to workspace 3
 					// Parse: "122e5f40,3" -> workspace ID is 3
 					parts := strings.Split(event.Data, ",")

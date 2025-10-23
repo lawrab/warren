@@ -86,7 +86,7 @@ func New() (*Client, error) {
 
 	// Verify command socket exists
 	if _, err := os.Stat(commandSocket); err != nil {
-		return nil, fmt.Errorf("Hyprland command socket not found: %w", err)
+		return nil, fmt.Errorf("hyprland command socket not found: %w", err)
 	}
 
 	return &Client{
@@ -101,7 +101,7 @@ func (c *Client) sendCommand(cmd string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to Hyprland socket: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	_, err = conn.Write([]byte(cmd))
 	if err != nil {
@@ -170,7 +170,7 @@ func (c *Client) ListenEvents(handler EventHandler) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to Hyprland event socket: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	scanner := bufio.NewScanner(conn)
 	for scanner.Scan() {

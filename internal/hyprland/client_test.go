@@ -32,13 +32,13 @@ func TestIsHyprland(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Save original env value
 			orig := os.Getenv("HYPRLAND_INSTANCE_SIGNATURE")
-			defer os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", orig)
+			defer func() { _ = os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", orig) }()
 
 			// Set test env value
 			if tt.envValue != "" {
-				os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", tt.envValue)
+				_ = os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", tt.envValue)
 			} else {
-				os.Unsetenv("HYPRLAND_INSTANCE_SIGNATURE")
+				_ = os.Unsetenv("HYPRLAND_INSTANCE_SIGNATURE")
 			}
 
 			if got := IsHyprland(); got != tt.want {
@@ -67,13 +67,13 @@ func TestNew(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Save original env value
 			orig := os.Getenv("HYPRLAND_INSTANCE_SIGNATURE")
-			defer os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", orig)
+			defer func() { _ = os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", orig) }()
 
 			// Set test env value
 			if tt.envValue != "" {
-				os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", tt.envValue)
+				_ = os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", tt.envValue)
 			} else {
-				os.Unsetenv("HYPRLAND_INSTANCE_SIGNATURE")
+				_ = os.Unsetenv("HYPRLAND_INSTANCE_SIGNATURE")
 			}
 
 			client, err := New()
@@ -108,13 +108,13 @@ func TestNewWithMockSocket(t *testing.T) {
 
 	// Create the hypr directory structure
 	hyprDir := filepath.Join(tmpDir, "hypr", signature)
-	if err := os.MkdirAll(hyprDir, 0755); err != nil {
+	if err := os.MkdirAll(hyprDir, 0700); err != nil {
 		t.Fatalf("Failed to create test directory: %v", err)
 	}
 
 	// Create a mock socket file
 	socketPath := filepath.Join(hyprDir, ".socket.sock")
-	if err := os.WriteFile(socketPath, []byte(""), 0644); err != nil {
+	if err := os.WriteFile(socketPath, []byte(""), 0600); err != nil {
 		t.Fatalf("Failed to create mock socket: %v", err)
 	}
 
@@ -122,17 +122,17 @@ func TestNewWithMockSocket(t *testing.T) {
 	origSig := os.Getenv("HYPRLAND_INSTANCE_SIGNATURE")
 	origXDG := os.Getenv("XDG_RUNTIME_DIR")
 	defer func() {
-		os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", origSig)
+		_ = os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", origSig)
 		if origXDG != "" {
-			os.Setenv("XDG_RUNTIME_DIR", origXDG)
+			_ = os.Setenv("XDG_RUNTIME_DIR", origXDG)
 		} else {
-			os.Unsetenv("XDG_RUNTIME_DIR")
+			_ = os.Unsetenv("XDG_RUNTIME_DIR")
 		}
 	}()
 
 	// Set test environment to use tmpDir
-	os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", signature)
-	os.Setenv("XDG_RUNTIME_DIR", tmpDir)
+	_ = os.Setenv("HYPRLAND_INSTANCE_SIGNATURE", signature)
+	_ = os.Setenv("XDG_RUNTIME_DIR", tmpDir)
 
 	// Create client - should succeed with mocked XDG_RUNTIME_DIR
 	client, err := New()
@@ -176,15 +176,15 @@ func setupMockCommandServer(t *testing.T) (string, func()) {
 	}()
 
 	cleanup := func() {
-		listener.Close()
-		os.Remove(socketPath)
+		_ = listener.Close()
+		_ = os.Remove(socketPath)
 	}
 
 	return socketPath, cleanup
 }
 
 func handleMockConnection(conn net.Conn) {
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	buf := make([]byte, 4096)
 	n, err := conn.Read(buf)
@@ -232,7 +232,7 @@ func handleMockConnection(conn net.Conn) {
 		response = []byte("ok")
 	}
 
-	conn.Write(response)
+	_, _ = conn.Write(response)
 }
 
 func TestClient_GetActiveWorkspace(t *testing.T) {
@@ -320,18 +320,18 @@ func setupMockEventServer(t *testing.T, events []string) (string, func()) {
 		if err != nil {
 			return
 		}
-		defer conn.Close()
+		defer func() { _ = conn.Close() }()
 
 		// Send mock events
 		for _, event := range events {
-			conn.Write([]byte(event + "\n"))
+			_, _ = conn.Write([]byte(event + "\n"))
 			time.Sleep(10 * time.Millisecond)
 		}
 	}()
 
 	cleanup := func() {
-		listener.Close()
-		os.Remove(socketPath)
+		_ = listener.Close()
+		_ = os.Remove(socketPath)
 	}
 
 	return socketPath, cleanup

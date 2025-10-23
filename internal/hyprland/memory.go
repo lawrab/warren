@@ -32,7 +32,7 @@ func NewWorkspaceMemory(configDir string) (*WorkspaceMemory, error) {
 	}
 
 	// Ensure config directory exists
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return nil, err
 	}
 
@@ -43,11 +43,8 @@ func NewWorkspaceMemory(configDir string) (*WorkspaceMemory, error) {
 		configPath:    configPath,
 	}
 
-	// Load existing memory if file exists
-	if err := wm.Load(); err != nil && !os.IsNotExist(err) {
-		// Log error but don't fail - we'll start fresh
-		// In a real implementation, you'd use a proper logger here
-	}
+	// Load existing memory if file exists (ignore if file doesn't exist)
+	_ = wm.Load()
 
 	return wm, nil
 }
@@ -95,7 +92,7 @@ func (wm *WorkspaceMemory) Save() error {
 		return err
 	}
 
-	return os.WriteFile(wm.configPath, jsonData, 0644)
+	return os.WriteFile(wm.configPath, jsonData, 0600)
 }
 
 // Load reads the workspace memory from disk.
@@ -126,9 +123,9 @@ func (wm *WorkspaceMemory) GetAll() map[int]string {
 	wm.mu.RLock()
 	defer wm.mu.RUnlock()
 
-	copy := make(map[int]string, len(wm.workspaceDirs))
+	result := make(map[int]string, len(wm.workspaceDirs))
 	for k, v := range wm.workspaceDirs {
-		copy[k] = v
+		result[k] = v
 	}
-	return copy
+	return result
 }
