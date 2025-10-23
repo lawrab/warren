@@ -46,6 +46,7 @@ Existing file managers are built for traditional desktop environments. Warren em
 - Automatic directory switching on workspace change
 - Graceful degradation in non-Hyprland environments
 - Persistent workspace memory (saved across sessions)
+- Code refactoring: Split main.go into logical modules for better maintainability
 
 🚧 **Next Phase:**
 - Phase 3: Power Features (file operations, dual-pane mode, search)
@@ -71,7 +72,7 @@ git clone https://github.com/lawrab/warren.git
 cd warren
 
 # Build
-go build -o warren cmd/warren/main.go
+go build -o warren ./cmd/warren
 
 # Run
 ./warren
@@ -87,7 +88,7 @@ go build -o warren cmd/warren/main.go
 nix develop
 
 # Build and run
-go build -o warren cmd/warren/main.go && ./warren
+go build -o warren ./cmd/warren && ./warren
 ```
 
 ### Keyboard Shortcuts
@@ -131,21 +132,22 @@ Warren isn't just another file manager. It's built for people who:
 
 ## Testing
 
-Warren maintains **~86% test coverage** for testable business logic. The coverage badge shows lower numbers because certain components are excluded from coverage metrics:
+Warren maintains **~70% test coverage** for testable business logic. The coverage badge shows lower numbers (~34%) because certain components are excluded from coverage metrics:
 
 - **GTK4 UI code** (`internal/ui/`) - Requires display server and complex mocking, verified through manual testing
-- **Main entry point** (`cmd/warren/main.go`) - Minimal initialization logic, tested implicitly
+- **Main entry point** (`cmd/warren/main.go`) - GTK initialization and activate functions, tested implicitly
 - **File watcher** (`internal/fileops/watcher.go`) - Goroutine-heavy code tested via integration
 - **File operations** (`internal/fileops/open.go`) - System-dependent (xdg-open), verified manually
 
 **Well-tested components:**
-- File listing and metadata (73%+)
-- Sorting algorithms (94%+)
-- Configuration management (67%+)
-- Data models (100%)
-- Utility functions (90%+)
+- Data models: **100%** coverage (`pkg/models/`)
+- Version info: **83.3%** coverage (`internal/version/`)
+- Hyprland IPC: **80.9%** coverage (`internal/hyprland/`)
+- Configuration: **73.8%** coverage (`internal/config/`)
+- File operations: **52.3%** coverage (testable parts of `internal/fileops/`)
+- Helper functions: Full test suite (`cmd/warren/helpers_test.go`, `cmd/warren/keyboard_test.go`)
 
-This is standard practice for GTK applications where UI framework code is impractical to unit test. See `.codecov.yml` for details.
+This is standard practice for GTK applications where UI framework code is impractical to unit test. See `.codecov.yml` for exclusion details.
 
 ## Contributing
 

@@ -1,4 +1,6 @@
 // Hyprland integration setup and event handling.
+// This file contains all Hyprland-specific wiring code including
+// IPC client initialization, event listeners, and workspace memory integration.
 package main
 
 import (
