@@ -1,4 +1,6 @@
 // Helper functions for status bar, sorting, and directory handling.
+// This file contains pure utility functions used by the main package
+// that don't require GTK context and are easily testable.
 package main
 
 import (

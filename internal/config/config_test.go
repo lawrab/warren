@@ -242,3 +242,39 @@ enabled = false
 		t.Errorf("Expected Hyprland.AutoSwitch default (true), got %v", cfg.Hyprland.AutoSwitch)
 	}
 }
+
+func TestDir(t *testing.T) {
+	// Create temporary directory for testing
+	tmpDir := t.TempDir()
+
+	// Override the config path for testing
+	t.Setenv("XDG_CONFIG_HOME", tmpDir)
+
+	// Dir should return the config directory path
+	dir, err := Dir()
+	if err != nil {
+		t.Fatalf("Dir() failed: %v", err)
+	}
+
+	expectedDir := filepath.Join(tmpDir, "warren")
+	if dir != expectedDir {
+		t.Errorf("Dir() = %s, want %s", dir, expectedDir)
+	}
+}
+
+func TestDirWithNoXDG(t *testing.T) {
+	// Unset XDG_CONFIG_HOME to test fallback
+	t.Setenv("XDG_CONFIG_HOME", "")
+
+	// Dir should fall back to ~/.config/warren
+	dir, err := Dir()
+	if err != nil {
+		t.Fatalf("Dir() failed: %v", err)
+	}
+
+	homeDir, _ := os.UserHomeDir()
+	expectedDir := filepath.Join(homeDir, ".config", "warren")
+	if dir != expectedDir {
+		t.Errorf("Dir() = %s, want %s", dir, expectedDir)
+	}
+}

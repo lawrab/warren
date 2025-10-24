@@ -1,4 +1,6 @@
 // Keyboard event handling and shortcuts setup.
+// This file contains keyboard controller setup, key binding matching logic,
+// and application-level shortcuts configuration.
 package main
 
 import (

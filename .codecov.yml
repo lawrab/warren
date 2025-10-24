@@ -16,10 +16,12 @@ ignore:
   # - Industry standard is to exclude UI framework code from unit test coverage
   - "internal/ui/**"
 
-  # Main entry point - excluded because:
-  # - Minimal logic (just initialization and GTK app setup)
-  # - Tested implicitly through integration tests
-  # - Cannot run without display server in CI
+  # Main entry point and GTK setup - excluded because:
+  # - main() and activate() require full GTK app initialization
+  # - Cannot run without display server in CI environment
+  # - Tested implicitly through integration tests and manual testing
+  # NOTE: Helper functions (helpers.go, hyprland.go, keyboard.go) ARE testable
+  #       and should have unit tests - only excluding main.go
   - "cmd/warren/main.go"
 
   # File watcher - excluded because:
