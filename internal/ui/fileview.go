@@ -25,6 +25,7 @@ type FileView struct {
 	sortMode      models.SortBy
 	sortOrder     models.SortOrder
 	watcher       *fileops.FileWatcher
+	yankedFiles   []string // Paths of yanked files for copy/paste
 }
 
 // NewFileView creates a new file listing widget.
@@ -85,8 +86,37 @@ func NewFileView() *FileView {
 	return fv
 }
 
-// addColumns adds the columns to the column view (name, size, modified).
+// addColumns adds the columns to the column view (yank indicator, name, size, modified).
 func (fv *FileView) addColumns() {
+	// Yank indicator column (icon showing if file is yanked)
+	yankFactory := gtk.NewSignalListItemFactory()
+	yankFactory.ConnectSetup(func(obj *glib.Object) {
+		cell := obj.Cast().(*gtk.ColumnViewCell)
+		image := gtk.NewImageFromIconName("object-select-symbolic")
+		image.SetIconSize(gtk.IconSizeNormal)
+		cell.SetChild(image)
+	})
+	yankFactory.ConnectBind(func(obj *glib.Object) {
+		cell := obj.Cast().(*gtk.ColumnViewCell)
+		image := cell.Child().(*gtk.Image)
+
+		pos := cell.Position()
+		if pos < uint(len(fv.files)) {
+			file := fv.files[pos]
+			// Show icon if file is yanked, hide otherwise
+			if fv.IsYanked(file.Path) {
+				image.SetVisible(true)
+				image.SetOpacity(1.0)
+			} else {
+				image.SetVisible(false)
+			}
+		}
+	})
+
+	yankColumn := gtk.NewColumnViewColumn("", &yankFactory.ListItemFactory)
+	yankColumn.SetFixedWidth(40)
+	fv.listView.AppendColumn(yankColumn)
+
 	// Name column
 	nameFactory := gtk.NewSignalListItemFactory()
 	nameFactory.ConnectSetup(func(obj *glib.Object) {
@@ -393,4 +423,61 @@ func (fv *FileView) Close() error {
 		return fv.watcher.Stop()
 	}
 	return nil
+}
+
+// YankSelected yanks (copies) the currently selected file.
+func (fv *FileView) YankSelected() {
+	selected := fv.GetSelected()
+	if selected == nil {
+		return
+	}
+	fv.yankedFiles = []string{selected.Path}
+	// Trigger a visual refresh to show the yank indicator
+	fv.updateYankVisuals()
+}
+
+// GetYanked returns the list of yanked file paths.
+func (fv *FileView) GetYanked() []string {
+	return fv.yankedFiles
+}
+
+// ClearYanked clears the yanked files list.
+func (fv *FileView) ClearYanked() {
+	fv.yankedFiles = nil
+	// Trigger a visual refresh to hide the yank indicator
+	fv.updateYankVisuals()
+}
+
+// updateYankVisuals forces the list view to update yank indicators.
+func (fv *FileView) updateYankVisuals() {
+	// Preserve current selection
+	currentSelection := fv.selectedIndex
+
+	// Force complete refresh to rebind all cells
+	// This ensures CSS classes are properly updated
+	fv.store.RemoveAll()
+	for i := range fv.files {
+		obj := gtk.NewStringObject(fmt.Sprintf("%d", i))
+		fv.store.Append(obj.Object)
+	}
+
+	// Restore selection
+	if currentSelection >= 0 && currentSelection < len(fv.files) {
+		fv.SelectIndex(currentSelection)
+	}
+}
+
+// IsYanked returns true if the file at the given path is yanked.
+func (fv *FileView) IsYanked(path string) bool {
+	for _, yanked := range fv.yankedFiles {
+		if yanked == path {
+			return true
+		}
+	}
+	return false
+}
+
+// HasYanked returns true if there are any yanked files.
+func (fv *FileView) HasYanked() bool {
+	return len(fv.yankedFiles) > 0
 }

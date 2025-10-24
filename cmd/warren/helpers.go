@@ -14,14 +14,29 @@ import (
 	"github.com/lawrab/warren/pkg/models"
 )
 
-// updateStatusBar updates the status bar label based on current selection.
+// updateStatusBar updates the status bar label based on current selection and yank state.
 func updateStatusBar(label *gtk.Label, fileView *ui.FileView) {
 	selected := fileView.GetSelected()
+	yanked := fileView.GetYanked()
+
+	var status string
 	if selected != nil {
-		label.SetText(selected.Path)
+		status = selected.Path
 	} else {
-		label.SetText("Ready")
+		status = "Ready"
 	}
+
+	// Add yank indicator if files are yanked
+	if len(yanked) > 0 {
+		if len(yanked) == 1 {
+			yankName := filepath.Base(yanked[0])
+			status = fmt.Sprintf("%s  [Yanked: %s]", status, yankName)
+		} else {
+			status = fmt.Sprintf("%s  [Yanked: %d files]", status, len(yanked))
+		}
+	}
+
+	label.SetText(status)
 }
 
 // formatSortMode returns a formatted string showing the current sort mode and order.
