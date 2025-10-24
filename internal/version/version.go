@@ -11,7 +11,7 @@ const (
 	Major = 0
 
 	// Minor version number
-	Minor = 2
+	Minor = 3
 
 	// Patch version number
 	Patch = 0

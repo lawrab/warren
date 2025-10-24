@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/lawrab/warren/internal/config"
 	"github.com/lawrab/warren/internal/ui"
@@ -42,6 +43,20 @@ func main() {
 func activate(app *gtk.Application, cfg *config.Config) {
 	// Initialize Hyprland integration
 	hyprState := setupHyprland(cfg)
+
+	// Add CSS styling
+	cssProvider := gtk.NewCSSProvider()
+	cssProvider.LoadFromString(`
+		/* Dim label styling */
+		.dim-label {
+			opacity: 0.65;
+		}
+	`)
+	gtk.StyleContextAddProviderForDisplay(
+		gdk.DisplayGetDefault(),
+		cssProvider,
+		gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+	)
 
 	// Create main window
 	window := gtk.NewApplicationWindow(app)
@@ -83,7 +98,7 @@ func activate(app *gtk.Application, cfg *config.Config) {
 	sortLabel.SetMarginEnd(12)
 	statusBar.Append(sortLabel)
 
-	helpLabel := gtk.NewLabel("j/k: navigate  h: up  l: enter  s: sort  r: reverse  .: hidden  q: quit")
+	helpLabel := gtk.NewLabel("?: help  j/k: nav")
 	helpLabel.AddCSSClass("dim-label")
 	statusBar.Append(helpLabel)
 

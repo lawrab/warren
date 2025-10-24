@@ -37,6 +37,11 @@ type KeybindingsConfig struct {
 	ToggleHidden    string `toml:"toggle_hidden"`     // Toggle hidden files visibility
 	CycleSortMode   string `toml:"cycle_sort_mode"`   // Cycle through sort modes
 	ToggleSortOrder string `toml:"toggle_sort_order"` // Toggle sort order (ascending/descending)
+	Yank            string `toml:"yank"`              // Yank (copy) selected file
+	Delete          string `toml:"delete"`            // Delete selected file
+	Paste           string `toml:"paste"`             // Paste yanked files
+	Rename          string `toml:"rename"`            // Rename selected file
+	ShowHelp        string `toml:"show_help"`         // Show keyboard shortcuts help
 }
 
 // GeneralConfig contains general application settings.
@@ -69,7 +74,12 @@ func Default() *Config {
 			EnterDir:        "l",
 			ToggleHidden:    "period",
 			CycleSortMode:   "s",
-			ToggleSortOrder: "r",
+			ToggleSortOrder: "o",
+			Yank:            "y",
+			Delete:          "d",
+			Paste:           "p",
+			Rename:          "r",
+			ShowHelp:        "question",
 		},
 		General: GeneralConfig{
 			StartDirectory: "~",
