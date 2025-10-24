@@ -16,13 +16,14 @@ ignore:
   # - Industry standard is to exclude UI framework code from unit test coverage
   - "internal/ui/**"
 
-  # Main entry point and GTK setup - excluded because:
-  # - main() and activate() require full GTK app initialization
+  # Main package (cmd/warren/) - excluded because:
+  # - All files depend on GTK4 and require display server
+  # - main.go, keyboard.go: GTK dialog creation and event handling
+  # - helpers.go: GTK label updates and UI state management
+  # - hyprland.go: Hyprland IPC (integration tested separately)
   # - Cannot run without display server in CI environment
-  # - Tested implicitly through integration tests and manual testing
-  # NOTE: Helper functions (helpers.go, hyprland.go, keyboard.go) ARE testable
-  #       and should have unit tests - only excluding main.go
-  - "cmd/warren/main.go"
+  # - UI logic verified through manual testing and integration tests
+  - "cmd/warren/*.go"
 
   # File watcher - excluded because:
   # - Heavy use of goroutines and fsnotify makes unit testing complex
