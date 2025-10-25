@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"os"
@@ -30,9 +30,9 @@ func TestParseSortMode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := parseSortMode(tt.input)
+			result := ParseSortMode(tt.input)
 			if result != tt.expected {
-				t.Errorf("parseSortMode(%q) = %v, want %v", tt.input, result, tt.expected)
+				t.Errorf("ParseSortMode(%q) = %v, want %v", tt.input, result, tt.expected)
 			}
 		})
 	}
@@ -56,9 +56,9 @@ func TestParseSortOrder(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := parseSortOrder(tt.input)
+			result := ParseSortOrder(tt.input)
 			if result != tt.expected {
-				t.Errorf("parseSortOrder(%q) = %v, want %v", tt.input, result, tt.expected)
+				t.Errorf("ParseSortOrder(%q) = %v, want %v", tt.input, result, tt.expected)
 			}
 		})
 	}
@@ -88,9 +88,9 @@ func TestGetStartDirectory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getStartDirectory(tt.input)
+			result := GetStartDirectory(tt.input)
 			if result != tt.expected {
-				t.Errorf("getStartDirectory(%q) = %q, want %q", tt.input, result, tt.expected)
+				t.Errorf("GetStartDirectory(%q) = %q, want %q", tt.input, result, tt.expected)
 			}
 		})
 	}
@@ -109,8 +109,8 @@ func TestGetStartDirectoryFallback(t *testing.T) {
 	}
 
 	// Passing a file path should fall back to home
-	result := getStartDirectory(tmpFile)
+	result := GetStartDirectory(tmpFile)
 	if result != homeDir {
-		t.Errorf("getStartDirectory(file path) = %q, want home dir %q", result, homeDir)
+		t.Errorf("GetStartDirectory(file path) = %q, want home dir %q", result, homeDir)
 	}
 }

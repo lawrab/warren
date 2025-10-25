@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/diamondburned/gotk4/pkg/gdk/v4"
 	"github.com/diamondburned/gotk4/pkg/gtk/v4"
 	"github.com/lawrab/warren/internal/config"
 	"github.com/lawrab/warren/internal/ui"
@@ -42,6 +43,20 @@ func main() {
 func activate(app *gtk.Application, cfg *config.Config) {
 	// Initialize Hyprland integration
 	hyprState := setupHyprland(cfg)
+
+	// Add CSS styling
+	cssProvider := gtk.NewCSSProvider()
+	cssProvider.LoadFromString(`
+		/* Dim label styling */
+		.dim-label {
+			opacity: 0.65;
+		}
+	`)
+	gtk.StyleContextAddProviderForDisplay(
+		gdk.DisplayGetDefault(),
+		cssProvider,
+		gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+	)
 
 	// Create main window
 	window := gtk.NewApplicationWindow(app)
@@ -83,7 +98,7 @@ func activate(app *gtk.Application, cfg *config.Config) {
 	sortLabel.SetMarginEnd(12)
 	statusBar.Append(sortLabel)
 
-	helpLabel := gtk.NewLabel("j/k: navigate  h: up  l: enter  s: sort  r: reverse  .: hidden  q: quit")
+	helpLabel := gtk.NewLabel("?: help  j/k: nav")
 	helpLabel.AddCSSClass("dim-label")
 	statusBar.Append(helpLabel)
 
@@ -94,7 +109,7 @@ func activate(app *gtk.Application, cfg *config.Config) {
 
 	// Determine starting directory
 	// First check if there's a remembered directory for current workspace
-	startDir := getStartDirectory(cfg.General.StartDirectory)
+	startDir := config.GetStartDirectory(cfg.General.StartDirectory)
 	if hyprState != nil && hyprState.client != nil && hyprState.memory != nil && cfg.Hyprland.WorkspaceMemory {
 		if ws, err := hyprState.client.GetActiveWorkspace(); err == nil {
 			if rememberedDir := hyprState.memory.Get(ws.ID); rememberedDir != "" {
@@ -108,8 +123,8 @@ func activate(app *gtk.Application, cfg *config.Config) {
 	}
 
 	// Apply sort mode from config
-	sortMode := parseSortMode(cfg.Appearance.DefaultSortMode)
-	sortOrder := parseSortOrder(cfg.Appearance.DefaultSortOrder)
+	sortMode := config.ParseSortMode(cfg.Appearance.DefaultSortMode)
+	sortOrder := config.ParseSortOrder(cfg.Appearance.DefaultSortOrder)
 	fileView.SetSortMode(sortMode, sortOrder)
 
 	// Load initial directory
