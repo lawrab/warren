@@ -1,4 +1,5 @@
-// Helper functions for parsing configuration values.
+// Package config provides configuration management and parsing utilities for Warren.
+// This file contains helper functions for parsing configuration values.
 package config
 
 import (
