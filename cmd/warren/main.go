@@ -109,7 +109,7 @@ func activate(app *gtk.Application, cfg *config.Config) {
 
 	// Determine starting directory
 	// First check if there's a remembered directory for current workspace
-	startDir := getStartDirectory(cfg.General.StartDirectory)
+	startDir := config.GetStartDirectory(cfg.General.StartDirectory)
 	if hyprState != nil && hyprState.client != nil && hyprState.memory != nil && cfg.Hyprland.WorkspaceMemory {
 		if ws, err := hyprState.client.GetActiveWorkspace(); err == nil {
 			if rememberedDir := hyprState.memory.Get(ws.ID); rememberedDir != "" {
@@ -123,8 +123,8 @@ func activate(app *gtk.Application, cfg *config.Config) {
 	}
 
 	// Apply sort mode from config
-	sortMode := parseSortMode(cfg.Appearance.DefaultSortMode)
-	sortOrder := parseSortOrder(cfg.Appearance.DefaultSortOrder)
+	sortMode := config.ParseSortMode(cfg.Appearance.DefaultSortMode)
+	sortOrder := config.ParseSortOrder(cfg.Appearance.DefaultSortOrder)
 	fileView.SetSortMode(sortMode, sortOrder)
 
 	// Load initial directory
